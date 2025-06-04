@@ -1,0 +1,40 @@
+### Quarkus ###
+/target/
+*.log
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.iws
+/out/
+!.idea/runConfigurations/
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+### OS Files ###
+.DS_Store
+Thumbs.db
+
+### Logs and temp files ###
+*.log
+*.tmp
+
+### VS Code (se você usa ocasionalmente) ###
+.vscode/
+
+### Arquivos de testes e relatórios ###
+/surefire-reports/
+/jacoco.exec
+/coverage-report/
+
+### Arquivos do Quarkus dev mode ###
+.quarkus/
