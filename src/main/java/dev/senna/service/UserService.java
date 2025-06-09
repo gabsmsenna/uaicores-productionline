@@ -1,6 +1,7 @@
 package dev.senna.service;
 
 import dev.senna.controller.CreateUserRequest;
+import dev.senna.controller.ListUserResponse;
 import dev.senna.exception.UserAlreadyExists;
 import dev.senna.model.entity.UserEntity;
 import dev.senna.repository.UserRepository;
@@ -8,6 +9,7 @@ import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.util.List;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -29,5 +31,17 @@ public class UserService {
         userRepository.persist(user);
 
         return user.getUserId();
+    }
+
+    public List<ListUserResponse> findAll(Integer page, Integer pageSize) {
+        var users = userRepository.findAll()
+                .page(page, pageSize)
+                .list();
+
+        return users.stream()
+                .map(userEntity -> new ListUserResponse(
+                        userEntity.getUsername(),
+                        userEntity.getRole()
+                )).toList();
     }
 }
