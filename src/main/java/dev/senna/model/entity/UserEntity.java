@@ -1,5 +1,6 @@
 package dev.senna.model.entity;
 
+import dev.senna.controller.dto.GetUserByIdResponse;
 import io.quarkus.security.jpa.Password;
 import io.quarkus.security.jpa.Roles;
 import io.quarkus.security.jpa.UserDefinition;
@@ -29,6 +30,13 @@ public class UserEntity {
 
     @Roles
     private String role;
+
+    public GetUserByIdResponse toResponse() {
+        return new GetUserByIdResponse(
+                this.username,
+                this.role
+        );
+    }
 
     public UUID getUserId() {
         return userId;

@@ -1,5 +1,6 @@
 package dev.senna.controller;
 
+import dev.senna.controller.dto.CreateUserRequest;
 import dev.senna.service.UserService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -8,6 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.net.URI;
+import java.util.UUID;
 
 @Path("/user")
 public class UserController {
@@ -35,4 +37,11 @@ public class UserController {
         return Response.ok(users).build();
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{id}")
+    public Response getUserById(@PathParam("id") UUID userId) {
+
+        return Response.ok(userService.findUserById(userId)).build();
+    }
 }

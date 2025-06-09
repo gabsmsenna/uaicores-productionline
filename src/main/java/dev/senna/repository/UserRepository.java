@@ -1,6 +1,5 @@
 package dev.senna.repository;
 
-import dev.senna.controller.CreateUserRequest;
 import dev.senna.model.entity.UserEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
