@@ -69,4 +69,12 @@ public class UserService {
 
         return user.toResponse();
     }
+
+    public void deleteUser(UUID userId) {
+
+        var user = userRepository.findByIdOptional(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        userRepository.deleteById(user.getUserId());
+    }
 }
