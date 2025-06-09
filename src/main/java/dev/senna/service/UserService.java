@@ -3,15 +3,14 @@ package dev.senna.service;
 import dev.senna.controller.dto.CreateUserRequest;
 import dev.senna.controller.dto.ListUserResponse;
 import dev.senna.controller.dto.GetUserByIdResponse;
+import dev.senna.controller.dto.UpdateUserDto;
 import dev.senna.exception.UserAlreadyExists;
 import dev.senna.exception.UserNotFoundException;
 import dev.senna.model.entity.UserEntity;
 import dev.senna.repository.UserRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
-import io.vertx.ext.auth.User;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -53,6 +52,20 @@ public class UserService {
 
         var user = userRepository.findByIdOptional(id)
                 .orElseThrow(UserNotFoundException::new);
+
+        return user.toResponse();
+    }
+
+    public GetUserByIdResponse updateUser(UUID userId, UpdateUserDto updateUserRequest) {
+
+        var user =  userRepository.findByIdOptional(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.setUsername(updateUserRequest.username());
+        user.setPassword(BcryptUtil.bcryptHash(updateUserRequest.password()));
+        user.setRole(updateUserRequest.role());
+
+        userRepository.persist(user);
 
         return user.toResponse();
     }

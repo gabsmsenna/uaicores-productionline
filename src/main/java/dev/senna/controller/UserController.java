@@ -1,6 +1,7 @@
 package dev.senna.controller;
 
 import dev.senna.controller.dto.CreateUserRequest;
+import dev.senna.controller.dto.UpdateUserDto;
 import dev.senna.service.UserService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -43,5 +44,14 @@ public class UserController {
     public Response getUserById(@PathParam("id") UUID userId) {
 
         return Response.ok(userService.findUserById(userId)).build();
+    }
+
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{id}")
+    @Transactional
+    public Response updateUser(@PathParam("id") UUID userId, UpdateUserDto createUserRequest) {
+
+        return Response.ok(userService.updateUser(userId, createUserRequest)).build();
     }
 }
