@@ -1,9 +1,9 @@
 package dev.senna.service;
 
-import dev.senna.controller.dto.CreateUserRequest;
-import dev.senna.controller.dto.ListUserResponse;
-import dev.senna.controller.dto.GetUserByIdResponse;
-import dev.senna.controller.dto.UpdateUserDto;
+import dev.senna.controller.dto.request.CreateUserRequest;
+import dev.senna.controller.dto.response.ListUserResponse;
+import dev.senna.controller.dto.response.GetUserByIdResponse;
+import dev.senna.controller.dto.request.UpdateUserDto;
 import dev.senna.exception.UserAlreadyExists;
 import dev.senna.exception.UserNotFoundException;
 import dev.senna.model.entity.UserEntity;
@@ -19,7 +19,7 @@ import java.util.UUID;
 public class UserService {
 
     @Inject
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     public UUID createUser(CreateUserRequest userReq) {
         if (userRepository.existsByUsername(userReq.username())) {

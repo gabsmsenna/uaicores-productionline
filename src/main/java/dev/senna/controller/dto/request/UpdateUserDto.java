@@ -1,4 +1,4 @@
-package dev.senna.controller.dto;
+package dev.senna.controller.dto.request;
 
 public record UpdateUserDto(
         String username,

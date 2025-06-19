@@ -1,7 +1,7 @@
 package dev.senna.controller;
 
-import dev.senna.controller.dto.CreateUserRequest;
-import dev.senna.controller.dto.UpdateUserDto;
+import dev.senna.controller.dto.request.CreateUserRequest;
+import dev.senna.controller.dto.request.UpdateUserDto;
 import dev.senna.service.UserService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;

@@ -1,4 +1,4 @@
-package dev.senna.controller.dto;
+package dev.senna.controller.dto.response;
 
 public record GetUserByIdResponse(
         String username,

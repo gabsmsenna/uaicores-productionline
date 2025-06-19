@@ -1,6 +1,6 @@
 package dev.senna.model.entity;
 
-import dev.senna.controller.dto.GetUserByIdResponse;
+import dev.senna.controller.dto.response.GetUserByIdResponse;
 import io.quarkus.security.jpa.Password;
 import io.quarkus.security.jpa.Roles;
 import io.quarkus.security.jpa.UserDefinition;
