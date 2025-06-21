@@ -5,10 +5,7 @@ import dev.senna.service.ItemService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -28,5 +25,15 @@ public class ItemController {
 
         return Response.status(Response.Status.CREATED).entity(itemId).build();
 
+    }
+
+    @GET()
+    @Path("/production")
+    public Response listProductionLine ( @QueryParam("page") @DefaultValue("0") Integer page,
+                                         @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
+
+        var producionLine = itemService.listProduction(page, pageSize);
+
+        return Response.status(Response.Status.OK).entity(producionLine).build();
     }
 }

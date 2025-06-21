@@ -4,6 +4,7 @@ public enum Status {
 
     IMPRESSO,
     ENCARTELADO,
+    EM_SILK,
     CHAPADO,
     VERSO_PRONTO,
     VINCADO,

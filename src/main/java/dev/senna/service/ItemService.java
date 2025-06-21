@@ -1,7 +1,7 @@
 package dev.senna.service;
 
+import dev.senna.controller.dto.ListProductionLineResponse;
 import dev.senna.controller.dto.request.AddItemRequestDto;
-import dev.senna.exception.ItemAlreadyHasOrder;
 import dev.senna.exception.ItemNotFoundException;
 import dev.senna.exception.OrderNotFoundException;
 import dev.senna.model.entity.ItemEntity;
@@ -10,6 +10,8 @@ import dev.senna.repository.ItemRepository;
 import dev.senna.repository.OrderRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import java.util.List;
 
 @ApplicationScoped
 public class ItemService {
@@ -48,5 +50,31 @@ public class ItemService {
         var item = itemRepository.findByIdOptional(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(itemId));
         return item;
+    }
+
+    public List<ListProductionLineResponse> listProduction(Integer page, Integer pageSize) {
+
+        List<Status> allowedStatuses = List.of(
+                Status.IMPRESSO,
+                Status.ENCARTELADO,
+                Status.EM_SILK,
+                Status.CHAPADO
+        );
+
+
+        var items = itemRepository.find("status in ?1", allowedStatuses)
+                .page(page, pageSize)
+                .list();
+
+        return items.stream()
+                .map(itemEntity -> new ListProductionLineResponse(
+                        itemEntity.getName(),
+                        itemEntity.getQuantity(),
+                        itemEntity.getSaleQuantity(),
+                        itemEntity.getMaterial(),
+                        itemEntity.getImage(),
+                        itemEntity.getStatus(),
+                        itemEntity.getOrder()
+                )).toList();
     }
 }
