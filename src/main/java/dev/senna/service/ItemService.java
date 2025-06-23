@@ -2,6 +2,7 @@ package dev.senna.service;
 
 import dev.senna.controller.dto.ListProductionLineResponse;
 import dev.senna.controller.dto.request.AddItemRequestDto;
+import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
 import dev.senna.exception.ItemNotFoundException;
 import dev.senna.exception.OrderNotFoundException;
 import dev.senna.model.entity.ItemEntity;
@@ -76,5 +77,18 @@ public class ItemService {
                         itemEntity.getStatus(),
                         itemEntity.getOrder()
                 )).toList();
+    }
+
+    public void assignOrder(AssignOrderToItemRequestDto reqDto, Long itemId) {
+
+        var order = orderRepository.findByIdOptional(reqDto.orderId())
+                .orElseThrow(() -> new OrderNotFoundException(reqDto.orderId()));
+
+        var item = itemRepository.findByIdOptional(itemId)
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
+
+        item.setOrder(order);
+
+        itemRepository.persist(item);
     }
 }
