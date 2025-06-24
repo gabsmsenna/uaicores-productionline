@@ -1,6 +1,6 @@
 package dev.senna.model.enums;
 
-public enum Status {
+public enum ItemStatus {
 
     IMPRESSO,
     ENCARTELADO,
@@ -10,5 +10,5 @@ public enum Status {
     VINCADO,
     CORTADO,
     EMBALADO,
-    POSTADO
+
 }

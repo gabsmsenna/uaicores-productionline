@@ -6,7 +6,7 @@ import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
 import dev.senna.exception.ItemNotFoundException;
 import dev.senna.exception.OrderNotFoundException;
 import dev.senna.model.entity.ItemEntity;
-import dev.senna.model.enums.Status;
+import dev.senna.model.enums.ItemStatus;
 import dev.senna.repository.ItemRepository;
 import dev.senna.repository.OrderRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -39,7 +39,7 @@ public class ItemService {
       item.setSaleQuantity(reqDto.saleQuantity());
       item.setMaterial(reqDto.material());
       item.setImage(reqDto.image());
-      item.setStatus(Status.IMPRESSO);
+      item.setStatus(ItemStatus.IMPRESSO);
 
       itemRepository.persist(item);
 
@@ -55,15 +55,15 @@ public class ItemService {
 
     public List<ListProductionLineResponse> listProduction(Integer page, Integer pageSize) {
 
-        List<Status> allowedStatuses = List.of(
-                Status.IMPRESSO,
-                Status.ENCARTELADO,
-                Status.EM_SILK,
-                Status.CHAPADO
+        List<ItemStatus> allowedItemStatuses = List.of(
+                ItemStatus.IMPRESSO,
+                ItemStatus.ENCARTELADO,
+                ItemStatus.EM_SILK,
+                ItemStatus.CHAPADO
         );
 
 
-        var items = itemRepository.find("status in ?1", allowedStatuses)
+        var items = itemRepository.find("itemStatus in ?1", allowedItemStatuses)
                 .page(page, pageSize)
                 .list();
 

@@ -5,10 +5,7 @@ import dev.senna.service.OrderService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -29,5 +26,15 @@ public class OrderController {
         var orderCreated = orderService.createOrder(reqDto);
 
         return Response.created(URI.create("/order/" + orderCreated.getId())).build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response listOrders( @QueryParam("page") @DefaultValue("0") Integer page,
+                                @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
+
+        var orders = orderService.listOrders(page, pageSize);
+
+        return Response.ok(orders).build();
     }
 }

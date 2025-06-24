@@ -1,5 +1,6 @@
 package dev.senna.model.entity;
 
+import dev.senna.model.enums.OrderStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

@@ -1,13 +1,8 @@
 package dev.senna.controller.dto.request;
 
-import dev.senna.model.enums.Status;
+import dev.senna.model.enums.ItemStatus;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
 
 public record AddItemRequestDto(
 
@@ -23,7 +18,7 @@ public record AddItemRequestDto(
         @NotBlank
         String image,
 
-        Status status,
+        ItemStatus itemStatus,
 
         Long orderId
 ) {}

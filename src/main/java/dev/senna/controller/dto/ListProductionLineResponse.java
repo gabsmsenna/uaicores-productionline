@@ -1,7 +1,7 @@
 package dev.senna.controller.dto;
 
 import dev.senna.model.entity.OrderEntity;
-import dev.senna.model.enums.Status;
+import dev.senna.model.enums.ItemStatus;
 
 public record ListProductionLineResponse(
         String name,
@@ -9,7 +9,7 @@ public record ListProductionLineResponse(
         Integer saleQuantity,
         String material,
         String image,
-        Status status,
+        ItemStatus itemStatus,
         OrderEntity order
 ) {
 }

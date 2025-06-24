@@ -1,6 +1,6 @@
 package dev.senna.model.entity;
 
-import dev.senna.model.enums.Status;
+import dev.senna.model.enums.ItemStatus;
 import jakarta.persistence.*;
 
 @Entity
@@ -28,7 +28,7 @@ public class ItemEntity {
 
     @Column(name = "actual_status", nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private ItemStatus itemStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
@@ -82,12 +82,12 @@ public class ItemEntity {
         this.image = image;
     }
 
-    public Status getStatus() {
-        return status;
+    public ItemStatus getStatus() {
+        return itemStatus;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
+    public void setStatus(ItemStatus itemStatus) {
+        this.itemStatus = itemStatus;
     }
 
     public OrderEntity getOrder() {
