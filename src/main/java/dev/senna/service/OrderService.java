@@ -3,6 +3,7 @@ package dev.senna.service;
 import dev.senna.controller.dto.CreateOrderReqDto;
 import dev.senna.controller.dto.ListOrdersResponseDto;
 import dev.senna.model.entity.OrderEntity;
+import dev.senna.model.enums.OrderStatus;
 import dev.senna.repository.ClientRepository;
 import dev.senna.repository.OrderRepository;
 import io.quarkus.panache.common.Page;
@@ -32,6 +33,7 @@ public class OrderService {
         order.setDeliveryDate(reqDto.deliveryDate());
         order.setPosted(false);
         order.setClient(client);
+        order.setStatus(OrderStatus.PRODUCAO);
 
         orderRepository.persist(order);
 
@@ -49,7 +51,21 @@ public class OrderService {
                         itemEntity.getSaleDate(),
                         itemEntity.getDeliveryDate(),
                         itemEntity.isPosted(),
-                        itemEntity.getClient().getClientName()
+                        itemEntity.getClient().getClientName(),
+                        itemEntity.getStatus()
+                )).toList();
+    }
+
+    public List<ListOrdersResponseDto> listOrdersInProduction(Integer page, Integer pageSize) {
+        var orders = orderRepository.listOrdersInProduction(page, pageSize);
+
+        return orders.stream()
+                .map(orderEntity -> new ListOrdersResponseDto(
+                        orderEntity.getSaleDate(),
+                        orderEntity.getDeliveryDate(),
+                        orderEntity.isPosted(),
+                        orderEntity.getClient().getClientName(),
+                        orderEntity.getStatus()
                 )).toList();
     }
 }

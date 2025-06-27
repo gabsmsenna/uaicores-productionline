@@ -37,4 +37,15 @@ public class OrderController {
 
         return Response.ok(orders).build();
     }
+
+    @GET
+    @Path("/production")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response listOrdersProduction(@QueryParam("page") @DefaultValue("0") Integer page,
+                                         @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
+
+        var ordersInProduction = orderService.listOrdersInProduction(page, pageSize);
+
+        return Response.ok(ordersInProduction).build();
+    }
 }

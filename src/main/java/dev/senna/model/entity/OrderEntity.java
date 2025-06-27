@@ -36,6 +36,10 @@ public class OrderEntity {
     @JoinColumn(name = "client_id", nullable = false)
     private ClientEntity client;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "order_status")
+    private OrderStatus status;
+
 // --- Métodos Auxiliares para sincronizar a relação ---
 
     /**
@@ -100,5 +104,13 @@ public class OrderEntity {
 
     public void setClient(ClientEntity client) {
         this.client = client;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
     }
 }
