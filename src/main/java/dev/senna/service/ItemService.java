@@ -15,6 +15,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.util.List;
+import java.util.Objects;
 
 @ApplicationScoped
 public class ItemService {
@@ -77,7 +78,7 @@ public class ItemService {
                         itemEntity.getMaterial(),
                         itemEntity.getImage(),
                         itemEntity.getStatus(),
-                        itemEntity.getOrder()
+                        itemEntity.getOrder() != null ? itemEntity.getOrder().getId() : null
                 )).toList();
     }
 
@@ -130,5 +131,23 @@ public class ItemService {
         }
 
         itemRepository.persist(item);
+    }
+
+    public List<ListProductionLineResponse> findByStatus(ItemStatus status) {
+
+        Objects.requireNonNull(status, "ItemStatus must not be null");
+
+        var items = itemRepository.findByStatus(status);
+
+        return items.stream()
+                .map(itemEntity -> new ListProductionLineResponse(
+                        itemEntity.getName(),
+                        itemEntity.getQuantity(),
+                        itemEntity.getSaleQuantity(),
+                        itemEntity.getMaterial(),
+                        itemEntity.getImage(),
+                        itemEntity.getStatus(),
+                        itemEntity.getOrder() != null ? itemEntity.getOrder().getId() : null
+                )).toList();
     }
 }

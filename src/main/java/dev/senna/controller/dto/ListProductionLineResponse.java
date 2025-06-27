@@ -10,6 +10,6 @@ public record ListProductionLineResponse(
         String material,
         String image,
         ItemStatus itemStatus,
-        OrderEntity order
+        Long orderId
 ) {
 }
