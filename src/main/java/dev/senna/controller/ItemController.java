@@ -39,16 +39,6 @@ public class ItemController {
 
     }
 
-    @GET()
-    @Path("/production")
-    public Response listProductionLine ( @QueryParam("page") @DefaultValue("0") Integer page,
-                                         @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
-
-        var producionLine = itemService.listProduction(page, pageSize);
-
-        return Response.status(Response.Status.OK).entity(producionLine).build();
-    }
-
     @PUT
     @Path("/{itemId}/order")
     @Transactional

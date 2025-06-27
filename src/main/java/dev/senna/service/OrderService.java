@@ -2,6 +2,10 @@ package dev.senna.service;
 
 import dev.senna.controller.dto.CreateOrderReqDto;
 import dev.senna.controller.dto.ListOrdersResponseDto;
+import dev.senna.controller.dto.response.ItemResponseDto;
+import dev.senna.controller.dto.response.ListOrderProductionResponseDto;
+
+import dev.senna.controller.dto.response.ListOrderProductionResponseDto;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.repository.ClientRepository;
@@ -66,6 +70,25 @@ public class OrderService {
                         orderEntity.isPosted(),
                         orderEntity.getClient().getClientName(),
                         orderEntity.getStatus()
+                )).toList();
+    }
+
+    public List<ListOrderProductionResponseDto> listProduction(Integer page, Integer pageSize) {
+        var orders = orderRepository.find("status", OrderStatus.PRODUCAO).page(Page.of(page, pageSize)).list();
+
+        return orders.stream()
+                .map(orderEntity -> new ListOrderProductionResponseDto(
+                        orderEntity.getClient().getClientName(),
+                        orderEntity.getStatus(),
+                        orderEntity.getItems().stream().map(item -> new ItemResponseDto(
+                                item.getId(),
+                                item.getName(),
+                                item.getQuantity(),
+                                item.getSaleQuantity(),
+                                item.getMaterial(),
+                                item.getImage(),
+                                item.getStatus()
+                        )).toList()
                 )).toList();
     }
 }
