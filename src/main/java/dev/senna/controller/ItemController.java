@@ -2,6 +2,7 @@ package dev.senna.controller;
 
 import dev.senna.controller.dto.request.AddItemRequestDto;
 import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
+import dev.senna.controller.dto.request.UpdateItemRequestDto;
 import dev.senna.service.ItemService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -45,6 +46,14 @@ public class ItemController {
 
         itemService.assignOrder(reqDto, itemId);
 
+        return Response.status(Response.Status.OK).build();
+    }
+
+    @PUT
+    @Path("/{itemId}")
+    @Transactional
+    public Response updateItem(@PathParam("itemId") Long itemId, @Valid UpdateItemRequestDto reqDto) {
+        itemService.updateItem(itemId, reqDto);
         return Response.status(Response.Status.OK).build();
     }
 }

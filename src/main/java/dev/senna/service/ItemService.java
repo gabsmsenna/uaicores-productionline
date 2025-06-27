@@ -3,7 +3,9 @@ package dev.senna.service;
 import dev.senna.controller.dto.ListProductionLineResponse;
 import dev.senna.controller.dto.request.AddItemRequestDto;
 import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
+import dev.senna.controller.dto.request.UpdateItemRequestDto;
 import dev.senna.exception.ItemNotFoundException;
+import dev.senna.exception.InvalidEditParameterException;
 import dev.senna.exception.OrderNotFoundException;
 import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.enums.ItemStatus;
@@ -88,6 +90,44 @@ public class ItemService {
                 .orElseThrow(() -> new ItemNotFoundException(itemId));
 
         item.setOrder(order);
+
+        itemRepository.persist(item);
+    }
+
+    public void updateItem(Long itemId, UpdateItemRequestDto reqDto) {
+        var item = itemRepository.findByIdOptional(itemId)
+                .orElseThrow(() -> new ItemNotFoundException(itemId));
+
+        boolean isAnyFieldUpdated = false;
+
+        if (reqDto.name() != null) {
+            item.setName(reqDto.name());
+            isAnyFieldUpdated = true;
+        }
+        if (reqDto.quantity() != null) {
+            item.setQuantity(reqDto.quantity());
+            isAnyFieldUpdated = true;
+        }
+        if (reqDto.saleQuantity() != null) {
+            item.setSaleQuantity(reqDto.saleQuantity());
+            isAnyFieldUpdated = true;
+        }
+        if (reqDto.material() != null) {
+            item.setMaterial(reqDto.material());
+            isAnyFieldUpdated = true;
+        }
+        if (reqDto.image() != null) {
+            item.setImage(reqDto.image());
+            isAnyFieldUpdated = true;
+        }
+        if (reqDto.itemStatus() != null) {
+            item.setStatus(reqDto.itemStatus());
+            isAnyFieldUpdated = true;
+        }
+
+        if (!isAnyFieldUpdated) {
+            throw new InvalidEditParameterException();
+        }
 
         itemRepository.persist(item);
     }
