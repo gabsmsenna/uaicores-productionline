@@ -1,11 +1,9 @@
 package dev.senna.service;
 
-import dev.senna.controller.dto.CreateOrderReqDto;
-import dev.senna.controller.dto.ListOrdersResponseDto;
-import dev.senna.controller.dto.response.ItemResponseDto;
+import dev.senna.controller.dto.request.CreateOrderReqDto;
+import dev.senna.controller.dto.response.ListOrdersResponseDto;
 import dev.senna.controller.dto.response.ListOrderProductionResponseDto;
-
-import dev.senna.controller.dto.response.ListOrderProductionResponseDto;
+import dev.senna.controller.dto.response.ListItemProductionLineResponse;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.repository.ClientRepository;
@@ -13,10 +11,8 @@ import dev.senna.repository.OrderRepository;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
-import java.awt.print.Pageable;
 import java.util.List;
 
 @ApplicationScoped
@@ -80,14 +76,14 @@ public class OrderService {
                 .map(orderEntity -> new ListOrderProductionResponseDto(
                         orderEntity.getClient().getClientName(),
                         orderEntity.getStatus(),
-                        orderEntity.getItems().stream().map(item -> new ItemResponseDto(
-                                item.getId(),
+                        orderEntity.getItems().stream().map(item -> new ListItemProductionLineResponse(
                                 item.getName(),
                                 item.getQuantity(),
                                 item.getSaleQuantity(),
                                 item.getMaterial(),
                                 item.getImage(),
-                                item.getStatus()
+                                item.getStatus(),
+                                item.getOrder() != null ? item.getOrder().getId() : null
                         )).toList()
                 )).toList();
     }

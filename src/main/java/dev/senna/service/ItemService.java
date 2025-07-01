@@ -1,6 +1,6 @@
 package dev.senna.service;
 
-import dev.senna.controller.dto.ListProductionLineResponse;
+import dev.senna.controller.dto.response.ListItemProductionLineResponse;
 import dev.senna.controller.dto.request.AddItemRequestDto;
 import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
 import dev.senna.controller.dto.request.UpdateItemRequestDto;
@@ -56,9 +56,9 @@ public class ItemService {
         return item;
     }
 
-    public List<ListProductionLineResponse> listProduction(Integer page, Integer pageSize) {
+    public List<ListItemProductionLineResponse> listProduction(Integer page, Integer pageSize) {
 
-        List<ItemStatus> allowedItemStatuses = List.of(
+        List<ItemStatus> allowedItemStatus = List.of(
                 ItemStatus.IMPRESSO,
                 ItemStatus.ENCARTELADO,
                 ItemStatus.EM_SILK,
@@ -66,12 +66,12 @@ public class ItemService {
         );
 
 
-        var items = itemRepository.find("itemStatus in ?1", allowedItemStatuses)
+        var items = itemRepository.find("itemStatus in ?1", allowedItemStatus)
                 .page(page, pageSize)
                 .list();
 
         return items.stream()
-                .map(itemEntity -> new ListProductionLineResponse(
+                .map(itemEntity -> new ListItemProductionLineResponse(
                         itemEntity.getName(),
                         itemEntity.getQuantity(),
                         itemEntity.getSaleQuantity(),
@@ -133,14 +133,14 @@ public class ItemService {
         itemRepository.persist(item);
     }
 
-    public List<ListProductionLineResponse> findByStatus(ItemStatus status) {
+    public List<ListItemProductionLineResponse> findByStatus(ItemStatus status) {
 
         Objects.requireNonNull(status, "ItemStatus must not be null");
 
         var items = itemRepository.findByStatus(status);
 
         return items.stream()
-                .map(itemEntity -> new ListProductionLineResponse(
+                .map(itemEntity -> new ListItemProductionLineResponse(
                         itemEntity.getName(),
                         itemEntity.getQuantity(),
                         itemEntity.getSaleQuantity(),

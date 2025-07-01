@@ -1,6 +1,6 @@
 package dev.senna.service;
 
-import dev.senna.controller.dto.CreateClientReqDto;
+import dev.senna.controller.dto.request.CreateClientReqDto;
 import dev.senna.model.entity.ClientEntity;
 import dev.senna.repository.ClientRepository;
 import jakarta.enterprise.context.ApplicationScoped;

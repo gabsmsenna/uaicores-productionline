@@ -1,6 +1,6 @@
 package dev.senna.controller;
 
-import dev.senna.controller.dto.CreateOrderReqDto;
+import dev.senna.controller.dto.request.CreateOrderReqDto;
 import dev.senna.service.OrderService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;

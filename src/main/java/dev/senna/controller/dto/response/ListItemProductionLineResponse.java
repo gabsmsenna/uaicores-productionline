@@ -1,9 +1,8 @@
-package dev.senna.controller.dto;
+package dev.senna.controller.dto.response;
 
-import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.ItemStatus;
 
-public record ListProductionLineResponse(
+public record ListItemProductionLineResponse(
         String name,
         Integer quantity,
         Integer saleQuantity,
