@@ -1,4 +1,4 @@
-package dev.senna.controller.dto;
+package dev.senna.controller.dto.response;
 
 import dev.senna.model.enums.OrderStatus;
 

@@ -1,6 +1,5 @@
-package dev.senna.controller.dto;
+package dev.senna.controller.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
