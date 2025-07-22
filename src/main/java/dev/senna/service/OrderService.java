@@ -1,9 +1,11 @@
 package dev.senna.service;
 
 import dev.senna.controller.dto.request.CreateOrderReqDto;
-import dev.senna.controller.dto.response.ListOrdersResponseDto;
-import dev.senna.controller.dto.response.ListOrderProductionResponseDto;
-import dev.senna.controller.dto.response.ListItemProductionLineResponse;
+import dev.senna.controller.dto.request.UpdateItemRequestDto;
+import dev.senna.controller.dto.request.UpdateOrderReqDto;
+import dev.senna.controller.dto.response.*;
+import dev.senna.exception.ClientNotFoundException;
+import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.repository.ClientRepository;
@@ -11,6 +13,7 @@ import dev.senna.repository.OrderRepository;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -31,7 +34,6 @@ public class OrderService {
         OrderEntity order = new OrderEntity();
         order.setSaleDate(reqDto.saleDate());
         order.setDeliveryDate(reqDto.deliveryDate());
-        order.setPosted(false);
         order.setClient(client);
         order.setStatus(OrderStatus.PRODUCAO);
 
@@ -50,7 +52,6 @@ public class OrderService {
                 .map(itemEntity -> new ListOrdersResponseDto(
                         itemEntity.getSaleDate(),
                         itemEntity.getDeliveryDate(),
-                        itemEntity.isPosted(),
                         itemEntity.getClient().getClientName(),
                         itemEntity.getStatus()
                 )).toList();
@@ -63,7 +64,6 @@ public class OrderService {
                 .map(orderEntity -> new ListOrdersResponseDto(
                         orderEntity.getSaleDate(),
                         orderEntity.getDeliveryDate(),
-                        orderEntity.isPosted(),
                         orderEntity.getClient().getClientName(),
                         orderEntity.getStatus()
                 )).toList();
@@ -87,4 +87,66 @@ public class OrderService {
                         )).toList()
                 )).toList();
     }
+
+    public List<LastSendOrdersResponseDto> listLastSendOrders(Integer page, Integer pageSize) {
+
+        var orderQuery = orderRepository.findLastSent(page, pageSize);
+
+        var orderEntities = orderQuery.list();
+
+        var orderDtos = orderEntities.stream()
+                .map(orderEntity -> new LastSendOrdersResponseDto(
+                        orderEntity.getClient().getClientName(),
+                        orderEntity.getItems().stream().map(itemEntity -> new ListItemProductionLineResponse(
+                                itemEntity.getName(),
+                                itemEntity.getQuantity(),
+                                itemEntity.getSaleQuantity(),
+                                itemEntity.getMaterial(),
+                                itemEntity.getImage(),
+                                itemEntity.getStatus(),
+                                itemEntity.getOrder().getId()
+                        )).toList(),
+                        orderEntity.getDeliveryDate()
+                )).toList();
+
+        return orderDtos;
+
+    }
+
+    @Transactional
+    public OrderEntity updateOrder(Long orderId, @Valid UpdateOrderReqDto reqDto) {
+
+        var orderToBeUpdated = orderRepository.findByIdOptional(orderId)
+                .orElseThrow(() -> new dev.senna.exception.OrderNotFoundException(orderId));
+
+        if (reqDto.clientId() != null) {
+            var client = clientRepository.findByIdOptional(reqDto.clientId())
+                    .orElseThrow(() -> new ClientNotFoundException(reqDto.clientId()));
+            orderToBeUpdated.setClient(client);
+        }
+
+        orderToBeUpdated.setStatus(reqDto.status());
+
+        orderRepository.persist(orderToBeUpdated);
+
+        return orderToBeUpdated;
+    }
+
+//    public List<ItemEntity> itemEntityMapper(List<UpdateItemRequestDto> items, OrderEntity orderToBeUpdated) {
+//       return items.stream()
+//                .map(itemDto -> {
+//                    ItemEntity newItem = new ItemEntity();
+//                    newItem.setName(itemDto.name());
+//                    newItem.setQuantity(itemDto.quantity());
+//                    newItem.setSaleQuantity(itemDto.saleQuantity());
+//                    newItem.setMaterial(itemDto.material());
+//                    newItem.setImage(itemDto.image());
+//                    newItem.setStatus(itemDto.itemStatus());
+//
+//                    newItem.setOrder(orderToBeUpdated);
+//
+//                    return newItem;
+//                }).toList();
+//    }
+
 }

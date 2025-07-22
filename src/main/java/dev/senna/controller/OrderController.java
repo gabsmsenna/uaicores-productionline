@@ -1,6 +1,7 @@
 package dev.senna.controller;
 
 import dev.senna.controller.dto.request.CreateOrderReqDto;
+import dev.senna.controller.dto.request.UpdateOrderReqDto;
 import dev.senna.service.OrderService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -47,5 +48,25 @@ public class OrderController {
         var ordersInProduction = orderService.listOrdersInProduction(page, pageSize);
 
         return Response.ok(ordersInProduction).build();
+    }
+
+    @GET
+    @Path("/last-send-orders")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response listLastSendOrders(@QueryParam("page") @DefaultValue("0") Integer page,
+                                       @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
+
+        var lasSendOrders = orderService.listLastSendOrders(page, pageSize);
+
+        return Response.ok(lasSendOrders).build();
+    }
+
+    @PUT
+    @Path("/{orderId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response updateOrder(@PathParam("orderId") Long orderId, @Valid UpdateOrderReqDto reqDto) {
+
+        return Response.ok(orderService.updateOrder(orderId, reqDto)).build();
     }
 }
