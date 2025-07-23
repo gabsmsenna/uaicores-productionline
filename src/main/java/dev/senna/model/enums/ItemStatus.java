@@ -7,8 +7,7 @@ public enum ItemStatus {
     EM_SILK,
     CHAPADO,
     VERSO_PRONTO,
-    VINCADO,
-    CORTADO,
+    ACABAMENTO,
     EMBALADO,
 
 }

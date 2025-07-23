@@ -8,6 +8,4 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class ClientRepository implements PanacheRepositoryBase<ClientEntity, UUID> {
-
-
 }

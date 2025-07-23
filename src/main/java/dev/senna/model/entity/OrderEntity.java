@@ -21,8 +21,8 @@ public class OrderEntity {
     @Column(name = "delivery_date", nullable = false)
     private LocalDate deliveryDate;
 
-    @Column(name = "posted")
-    private boolean posted;
+    @Column(name = "postedDate")
+    private LocalDate postedDate;
 
     @OneToMany(
             mappedBy = "order",
@@ -80,14 +80,6 @@ public class OrderEntity {
 
     public void setDeliveryDate(LocalDate deliveryDate) {
         this.deliveryDate = deliveryDate;
-    }
-
-    public boolean isPosted() {
-        return posted;
-    }
-
-    public void setPosted(boolean posted) {
-        this.posted = posted;
     }
 
     public List<ItemEntity> getItems() {

@@ -62,7 +62,9 @@ public class ItemService {
                 ItemStatus.IMPRESSO,
                 ItemStatus.ENCARTELADO,
                 ItemStatus.EM_SILK,
-                ItemStatus.CHAPADO
+                ItemStatus.CHAPADO,
+                ItemStatus.VERSO_PRONTO,
+                ItemStatus.ACABAMENTO
         );
 
 

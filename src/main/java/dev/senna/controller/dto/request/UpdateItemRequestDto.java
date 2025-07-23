@@ -10,6 +10,6 @@ public record UpdateItemRequestDto(
     String material,
     String image,
     ItemStatus itemStatus,
-    OrderEntity order
+    Long orderId
 ) {
 }
