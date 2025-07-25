@@ -2,13 +2,13 @@ package dev.senna.service;
 
 import dev.senna.controller.dto.request.AddItemRequestDto;
 import dev.senna.controller.dto.response.ListItemProductionLineResponse;
-import dev.senna.model.entity.ClientEntity;
 import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.ItemStatus;
 import dev.senna.repository.ItemRepository;
 import dev.senna.repository.OrderRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -16,10 +16,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -35,9 +33,6 @@ class ItemServiceTest {
 
     @InjectMock
     OrderRepository orderRepository;
-
-    @InjectMock
-    PanacheQuery<ItemEntity> panacheQuery;
 
     @org.junit.jupiter.api.Nested
     @DisplayName("addItem() tests")
@@ -122,10 +117,7 @@ class ItemServiceTest {
         @DisplayName("Should return a list of items successfully when exists items")
         void shouldListProductionWhenExistsItems() {
 
-             // Arrange
-            Integer page = 0;
-            Integer pageSize = 10;
-
+            // Arrange
             OrderEntity mockOrder = new OrderEntity();
             mockOrder.setId(1L);
 
@@ -148,15 +140,34 @@ class ItemServiceTest {
             mockItem2.setImage("IMG_URL");
 
             ItemEntity mockItem3 = new ItemEntity();
-            mockItem2.setId(567L);
-            mockItem2.setName("ITEM_NAME_3");
-            mockItem2.setMaterial("MATERIAL");
-            mockItem2.setOrder(null);
-            mockItem2.setQuantity(1000);
-            mockItem2.setStatus(ItemStatus.EM_SILK);
-            mockItem2.setImage("IMG_URL");
+            mockItem3.setId(567L);
+            mockItem3.setName("ITEM_NAME_3");
+            mockItem3.setMaterial("MATERIAL");
+            mockItem3.setOrder(null);
+            mockItem3.setQuantity(1000);
+            mockItem3.setStatus(ItemStatus.EM_SILK);
+            mockItem3.setImage("IMG_URL");
 
-            when(panacheQuery.list()).thenReturn(List.of(mockItem1, mockItem2, mockItem3));
+            List<ItemStatus> allowedItemStatus = List.of(
+                    ItemStatus.IMPRESSO,
+                    ItemStatus.ENCARTELADO,
+                    ItemStatus.EM_SILK,
+                    ItemStatus.CHAPADO,
+                    ItemStatus.VERSO_PRONTO,
+                    ItemStatus.ACABAMENTO
+            );
+
+            int page = 0;
+            int pageSize = 10;
+
+            @SuppressWarnings("unchecked")
+            PanacheQuery<ItemEntity> panacheQueryMock = mock(PanacheQuery.class);
+
+            when(itemRepository.find("itemStatus in ?1", allowedItemStatus)).thenReturn(panacheQueryMock);
+
+            when(panacheQueryMock.page(page, pageSize)).thenReturn(panacheQueryMock);
+
+            when(panacheQueryMock.list()).thenReturn(List.of(mockItem1, mockItem2, mockItem3));
 
             // Act
             List<ListItemProductionLineResponse> result = itemService.listProduction(0, 10);
@@ -171,19 +182,19 @@ class ItemServiceTest {
             assertEquals(1000, result.get(0).quantity());
             assertEquals(1L, result.get(0).orderId());
 
-            assertEquals("ITEM_NAME_2", result.get(0).name());
-            assertEquals("MATERIAL", result.get(0).material());
-            assertEquals(ItemStatus.ACABAMENTO, result.get(0).itemStatus());
-            assertEquals("IMG_URL", result.get(0).image());
-            assertEquals(1000, result.get(0).quantity());
-            assertEquals(1L, result.get(0).orderId());
+            assertEquals("ITEM_NAME_2", result.get(1).name());
+            assertEquals("MATERIAL", result.get(1).material());
+            assertEquals(ItemStatus.ACABAMENTO, result.get(1).itemStatus());
+            assertEquals("IMG_URL", result.get(1).image());
+            assertEquals(1000, result.get(1).quantity());
+            assertEquals(1L, result.get(1).orderId());
 
-            assertEquals("ITEM_NAME_3", result.get(0).name());
-            assertEquals("MATERIAL", result.get(0).material());
-            assertEquals(ItemStatus.EM_SILK, result.get(0).itemStatus());
-            assertEquals("IMG_URL", result.get(0).image());
-            assertEquals(1000, result.get(0).quantity());
-            assertNull(result.get(0).orderId());
+            assertEquals("ITEM_NAME_3", result.get(2).name());
+            assertEquals("MATERIAL", result.get(2).material());
+            assertEquals(ItemStatus.EM_SILK, result.get(2).itemStatus());
+            assertEquals("IMG_URL", result.get(2).image());
+            assertEquals(1000, result.get(2).quantity());
+            assertNull(result.get(2).orderId());
 
         }
     }

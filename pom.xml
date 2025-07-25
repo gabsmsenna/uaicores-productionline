@@ -4,20 +4,22 @@
     <groupId>dev.senna</groupId>
     <artifactId>uaicores-productionline</artifactId>
     <version>1.0-SNAPSHOT</version>
+
     <properties>
-        <assembly-plugin.version>3.1.0</assembly-plugin.version>
-        <compiler-plugin.version>3.14.0</compiler-plugin.version>
-        <maven.compiler.parameters>true</maven.compiler.parameters>
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.compiler.source>17</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <quarkus-plugin.version>3.23.0</quarkus-plugin.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
+
+        <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-        <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.version>3.23.0</quarkus.platform.version>
+
+        <compiler-plugin.version>3.14.0</compiler-plugin.version>
         <surefire-plugin.version>3.5.2</surefire-plugin.version>
     </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -29,39 +31,57 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <dependencies>
-        <!-- remove if not using jaxrs -->
+        <!-- Dependências da API REST -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-resteasy</artifactId>
-        </dependency>
-        <!-- remove if not using servlets -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-undertow</artifactId>
-        </dependency>
-        <!-- remove if not using vertx web -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-reactive-routes</artifactId>
-        </dependency>
-        <!-- remove if not using funqy -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-funqy-http</artifactId>
+            <artifactId>quarkus-resteasy-jackson</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-amazon-lambda-rest</artifactId>
+            <artifactId>quarkus-smallrye-openapi</artifactId>
         </dependency>
+
+        <!-- Dependências de Persistência -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-validator</artifactId>
+        </dependency>
+
+        <!-- Dependências de Segurança (opcional, manter se for usar) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-security-jpa</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>io.quarkiverse.resteasy-problem</groupId>
             <artifactId>quarkus-resteasy-problem</artifactId>
             <version>3.20.1</version>
         </dependency>
+
+        
+
+        
+
+        <!-- Dependências de Teste -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5-mockito</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -69,81 +89,38 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!-- JDBC driver dependencies -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-postgresql</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-validator</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-security-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-panache</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-resteasy-jackson</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-openapi</artifactId>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.mockito/mockito-core -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>5.18.0</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-h2</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-mockito</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
+                <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
-                <version>3.23.0</version> <executions>
-                <execution>
-                    <goals>
-                        <goal>build</goal>
-                        <goal>generate-code</goal>
-                        <goal>generate-code-tests</goal>
-                    </goals>
-                </execution>
-            </executions>
+                <version>${quarkus.platform.version}</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>generate-code</goal>
+                            <goal>generate-code-tests</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${compiler-plugin.version}</version>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -157,6 +134,7 @@
             </plugin>
         </plugins>
     </build>
+
     <profiles>
         <profile>
             <id>native</id>
@@ -165,6 +143,9 @@
                     <name>native</name>
                 </property>
             </activation>
+            <properties>
+                <quarkus.package.type>native</quarkus.package.type>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -188,9 +169,6 @@
                     </plugin>
                 </plugins>
             </build>
-            <properties>
-                <quarkus.native.enabled>true</quarkus.native.enabled>
-            </properties>
         </profile>
     </profiles>
 </project>

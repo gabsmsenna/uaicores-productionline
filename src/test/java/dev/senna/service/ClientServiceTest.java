@@ -5,15 +5,13 @@ import dev.senna.model.entity.ClientEntity;
 import dev.senna.repository.ClientRepository;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.DisplayName;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import jakarta.inject.Inject;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
@@ -25,46 +23,40 @@ class ClientServiceTest {
     ClientService clientService;
 
     @InjectMock
-    ClientRepository clientRepository;
+    private ClientRepository clientRepository;
+
 
     @Test
-    @DisplayName("Deve criar um cliente e retornar o ID gerado")
-    void shouldCreateClientAndReturnGeneratedId() {
+    void createClient() {
 
-        // Arrange
-        // 1. Definição dos dados de entrada.
-        var clientDto = new CreateClientReqDto("CLIENT_NAME_TEST");
-        var expectedId = UUID.randomUUID();
+        // 1. Cenário (Arrange)
+        String clientName = "John Doe";
+        CreateClientReqDto requestDto = new CreateClientReqDto(clientName);
 
-        // 2. Configuração do comportamento do mock.
-        // Usamos doAnswer para simular a lógica de persistência que atribui um ID à entidade.
-        // Esta é a forma correta de fazer o que você intencionou.
+        // Captura o argumento passado para o método persist
+        ArgumentCaptor<ClientEntity> clientEntityCaptor = ArgumentCaptor.forClass(ClientEntity.class);
+
+        // Simula o comportamento do método persist para definir um ID no cliente
         doAnswer(invocation -> {
             ClientEntity entity = invocation.getArgument(0);
-            entity.setClientId(expectedId); // Simula o banco de dados atribuindo o ID.
+            entity.setClientId(UUID.randomUUID()); // Simula a geração do ID pelo banco de dados
             return null;
         }).when(clientRepository).persist(any(ClientEntity.class));
 
-        // 3. Preparação do ArgumentCaptor para capturar a entidade enviada ao persist.
-        ArgumentCaptor<ClientEntity> clientEntityCaptor = ArgumentCaptor.forClass(ClientEntity.class);
+        // 2. Ação (Act)
+        UUID newClientId = clientService.createClient(requestDto);
 
-        // Act
-        // 4. Execução do método sob teste. Apenas uma chamada.
-        UUID returnedId = clientService.createClient(clientDto);
+        // 3. Verificação (Assert)
+        assertNotNull(newClientId, "O ID do cliente não deveria ser nulo.");
 
-        // Assert
-        // 5. Verificação do retorno do método.
-        assertNotNull(returnedId, "O ID retornado não deve ser nulo.");
-        assertEquals(expectedId, returnedId, "O ID retornado deve ser o mesmo que foi simulado na persistência.");
-
-        // 6. Verificação da interação com o mock e captura do argumento.
-        // Garantimos que o método 'persist' foi chamado exatamente uma vez.
+        // Verifica se o método persist foi chamado exatamente uma vez
         verify(clientRepository).persist(clientEntityCaptor.capture());
 
-        // 7. Verificação dos valores do objeto capturado.
-        // Agora podemos inspecionar a entidade que o serviço tentou salvar.
-        ClientEntity capturedEntity = clientEntityCaptor.getValue();
-        assertNotNull(capturedEntity, "A entidade persistida não deve ser nula.");
-        assertEquals(clientDto.clientName(), capturedEntity.getClientName(), "O nome do cliente na entidade não corresponde ao DTO.");
+        // Captura a entidade que foi "salva"
+        ClientEntity persistedClient = clientEntityCaptor.getValue();
+
+        // Verifica se o nome do cliente na entidade está correto
+        assertEquals(clientName, persistedClient.getClientName(), "O nome do cliente na entidade persistida está incorreto.");
+
     }
 }
