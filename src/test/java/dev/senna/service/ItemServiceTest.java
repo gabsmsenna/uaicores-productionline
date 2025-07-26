@@ -16,6 +16,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -110,7 +112,7 @@ class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("Should list ")
+    @DisplayName("Should return a list with the items on the production line")
     class listProduction {
 
         @Test
@@ -148,15 +150,7 @@ class ItemServiceTest {
             mockItem3.setStatus(ItemStatus.EM_SILK);
             mockItem3.setImage("IMG_URL");
 
-            List<ItemStatus> allowedItemStatus = List.of(
-                    ItemStatus.IMPRESSO,
-                    ItemStatus.ENCARTELADO,
-                    ItemStatus.EM_SILK,
-                    ItemStatus.CHAPADO,
-                    ItemStatus.VERSO_PRONTO,
-                    ItemStatus.ACABAMENTO
-            );
-
+            var allowedItemStatus = returnAllowedItemStatus();
             int page = 0;
             int pageSize = 10;
 
@@ -195,26 +189,103 @@ class ItemServiceTest {
             assertEquals("IMG_URL", result.get(2).image());
             assertEquals(1000, result.get(2).quantity());
             assertNull(result.get(2).orderId());
+        }
 
+        @Test
+        @DisplayName("Should return a list with just one item if ")
+        void shouldListProductionWhenExistsAnUniqueItem() {
+
+            // Arrange
+            OrderEntity mockOrder = new OrderEntity();
+            mockOrder.setId(1L);
+
+            ItemEntity mockItem = new ItemEntity();
+            mockItem.setId(123L);
+            mockItem.setName("ITEM_NAME");
+            mockItem.setMaterial("MATERIAL");
+            mockItem.setOrder(mockOrder);
+            mockItem.setQuantity(1000);
+            mockItem.setStatus(ItemStatus.IMPRESSO);
+            mockItem.setImage("IMG_URL");
+
+            var allowedItemStatus = returnAllowedItemStatus();
+
+            int page = 0;
+            int pageSize = 10;
+
+            @SuppressWarnings("unchecked")
+            PanacheQuery<ItemEntity> panacheQueryMock = mock(PanacheQuery.class);
+
+            when(itemRepository.find("itemStatus in ?1", allowedItemStatus)).thenReturn(panacheQueryMock);
+
+            when(panacheQueryMock.page(page, pageSize)).thenReturn(panacheQueryMock);
+
+            when(panacheQueryMock.list()).thenReturn(List.of(mockItem));
+
+            // Act
+            List<ListItemProductionLineResponse> result = itemService.listProduction(0, 10);
+
+            // Assert
+            assertNotNull(result);
+
+            assertEquals(1, result.size(), "The list should contain exactly one element");
+
+            assertEquals("ITEM_NAME", result.get(0).name());
+            assertEquals("MATERIAL", result.get(0).material());
+            assertEquals(ItemStatus.IMPRESSO, result.get(0).itemStatus());
+            assertEquals("IMG_URL", result.get(0).image());
+            assertEquals(1000, result.get(0).quantity());
+            assertEquals(1L, result.get(0).orderId());
+        }
+
+        @Test
+        @DisplayName("Should return an empty list when no items match the allowed item status")
+        void shouldReturnEmptyListWhenNoItemsMatchTheAllowedItemStatus() {
+
+            // Arrange
+            int page = 10;
+            int pageSize = 10;
+
+            @SuppressWarnings("unchecked")
+            PanacheQuery<ItemEntity> panacheQueryMock = mock(PanacheQuery.class);
+
+            when(itemRepository.find("itemStatus in ?1", returnAllowedItemStatus())).thenReturn(panacheQueryMock);
+            when(panacheQueryMock.page(page, pageSize)).thenReturn(panacheQueryMock);
+            when(panacheQueryMock.list()).thenReturn(Collections.emptyList());
+
+            // Act
+            List<ListItemProductionLineResponse> result = itemService.listProduction(page, pageSize);
+
+            // Assert
+            assertNotNull(result);
+            assertTrue(result.isEmpty(), "The list should be empty");
+
+        }
+
+        List<ItemStatus> returnAllowedItemStatus() {
+
+            return List.of(
+                    ItemStatus.IMPRESSO,
+                    ItemStatus.ENCARTELADO,
+                    ItemStatus.EM_SILK,
+                    ItemStatus.CHAPADO,
+                    ItemStatus.VERSO_PRONTO,
+                    ItemStatus.ACABAMENTO
+            );
+        }
+    }
+
+    @Nested
+    @DisplayName("Should assign a the order field of an item")
+    class assignOrder {
+
+        @Test
+        @DisplayName("Should assign the order field of an item successfully when the item exists")
+        void shouldAssignOrderFieldOfAnItemSuccessfullyWhenItemExists() {
+            
         }
     }
 
 
 
-//    MINHA PRIMEIRA VERSÃO DO TESTE
-//    @Test
-//    @DisplayName("Should create an item to the production line")
-//    void addItem() {
-//
-//        // Arrange
-//        var dummyItemDto = new AddItemRequestDto("ITEM_NAME", 1000, "MATERIAL", "IMG_URL", ItemStatus.IMPRESSO, 1L);
-//        ArgumentCaptor<ItemEntity> itemEntityCaptor = ArgumentCaptor.forClass(ItemEntity.class);
-//
-//        // Act
-//       var itemIdReturned =  itemService.addItem(dummyItemDto);
-//
-//        // Assert
-//        verify(itemRepository).persist(itemEntityCaptor.capture());
-//        assertNotNull(itemIdReturned);
-//    }
 }
