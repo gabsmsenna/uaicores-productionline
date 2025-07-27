@@ -3,11 +3,12 @@ package dev.senna.service;
 import dev.senna.controller.dto.request.CreateClientReqDto;
 import dev.senna.model.entity.ClientEntity;
 import dev.senna.repository.ClientRepository;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
@@ -16,15 +17,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 
-@QuarkusTest
+@ExtendWith(MockitoExtension.class)
 class ClientServiceTest {
 
-    @Inject
+    @InjectMocks
     ClientService clientService;
 
-    @InjectMock
+    @Mock
     private ClientRepository clientRepository;
-
 
     @Test
     void createClient() {

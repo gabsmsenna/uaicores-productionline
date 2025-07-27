@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.jaxb.core.v2.TODO;
 
 @Path("/production")
 @Produces(MediaType.APPLICATION_JSON)
@@ -37,4 +38,6 @@ public class ProductionController {
 
         return Response.status(Response.Status.OK).entity(orderProductionLine).build();
     }
+
+    // todo Criar endpoint com produtos aguardando envio
 }
