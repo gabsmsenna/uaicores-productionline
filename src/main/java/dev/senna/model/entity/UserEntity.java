@@ -1,6 +1,8 @@
 package dev.senna.model.entity;
 
 import dev.senna.controller.dto.response.GetUserByIdResponse;
+import dev.senna.model.enums.UserRole;
+import io.quarkus.security.User;
 import io.quarkus.security.jpa.Password;
 import io.quarkus.security.jpa.Roles;
 import io.quarkus.security.jpa.UserDefinition;
@@ -29,7 +31,16 @@ public class UserEntity {
     private String password;
 
     @Roles
-    private String role;
+    private UserRole role;
+
+    public UserEntity(UUID userId, String username, String password, UserRole role) {
+        this.userId = userId;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+    }
+
+    public UserEntity() {}
 
     public GetUserByIdResponse toResponse() {
         return new GetUserByIdResponse(
@@ -62,11 +73,11 @@ public class UserEntity {
         this.password = password;
     }
 
-    public String getRole() {
+    public UserRole getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(UserRole role) {
         this.role = role;
     }
 }
