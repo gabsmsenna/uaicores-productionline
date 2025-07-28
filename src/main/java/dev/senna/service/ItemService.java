@@ -98,8 +98,12 @@ public class ItemService {
     }
 
     public void updateItem(Long itemId, UpdateItemRequestDto reqDto) {
+
         var item = itemRepository.findByIdOptional(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(itemId));
+
+        orderRepository.findByIdOptional(reqDto.orderId())
+                .orElseThrow(() -> new OrderNotFoundException(reqDto.orderId()));
 
         boolean isAnyFieldUpdated = false;
 

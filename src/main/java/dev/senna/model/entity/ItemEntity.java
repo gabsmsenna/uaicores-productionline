@@ -7,6 +7,17 @@ import jakarta.persistence.*;
 @Table(name = "tb_item")
 public class ItemEntity {
 
+    public ItemEntity(Long id, String name, Integer quantity, Integer saleQuantity, String material, String image, ItemStatus itemStatus, OrderEntity order) {
+        this.id = id;
+        this.name = name;
+        this.quantity = quantity;
+        this.saleQuantity = saleQuantity;
+        this.material = material;
+        this.image = image;
+        this.itemStatus = itemStatus;
+        this.order = order;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,6 +44,10 @@ public class ItemEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private OrderEntity order;
+
+    public ItemEntity() {
+
+    }
 
     public Long getId() {
         return id;

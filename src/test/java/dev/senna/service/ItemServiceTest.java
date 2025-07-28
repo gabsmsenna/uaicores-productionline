@@ -2,7 +2,11 @@ package dev.senna.service;
 
 import dev.senna.controller.dto.request.AddItemRequestDto;
 import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
+import dev.senna.controller.dto.request.UpdateItemRequestDto;
 import dev.senna.controller.dto.response.ListItemProductionLineResponse;
+import dev.senna.exception.InvalidEditParameterException;
+import dev.senna.exception.ItemNotFoundException;
+import dev.senna.exception.OrderNotFoundException;
 import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.ItemStatus;
@@ -18,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +44,12 @@ class ItemServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private OrderEntity orderEntityMock;
+
+    @Mock
+    private ItemEntity itemEntityMock;
 
     @Nested
     @DisplayName("addItem() tests")
@@ -194,5 +205,198 @@ class ItemServiceTest {
             assertNotNull(capturedItem.getOrder());
             assertEquals(orderId, capturedItem.getOrder().getId());
         }
+
+        @Test
+        @DisplayName("Should throw order not found when order does not exists")
+        void shouldThrowOrderNotFoundExceptionWhenOrderDoesNotExist() {
+
+            // Arrange
+            var orderId = 1L;
+            var itemId = 1L;
+            when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.empty());
+
+            // Act and Assert
+            var exception = assertThrows(OrderNotFoundException.class, () -> {
+                itemService.assignOrder(new AssignOrderToItemRequestDto(orderId), itemId);
+            });
+
+            // Assert
+            verify(orderRepository).findByIdOptional(orderId);
+            verify(itemRepository, never()).findByIdOptional(anyLong());
+            verify(itemRepository, never()).persist(any(ItemEntity.class));
+            assertEquals("Order with id " + orderId + " not found on the application", exception.getDetail());
+
+        }
+
+        @Test
+        @DisplayName("Should throw item not found exception when item does not exists")
+        void shouldThrowItemNotFoundExceptionWhenItemDoesNotExist() {
+
+            // Arrange
+            var orderId = 1L;
+            var itemId = 1L;
+            when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(orderEntityMock));
+            when(itemRepository.findByIdOptional(itemId)).thenReturn(Optional.empty());
+
+            // Act and Assert
+            var exception = assertThrows(ItemNotFoundException.class, () -> {
+                itemService.assignOrder(new AssignOrderToItemRequestDto(orderId), itemId);
+            });
+
+            // Assert
+            verify(orderRepository).findByIdOptional(orderId);
+            verify(itemRepository).findByIdOptional(itemId);
+            verify(itemRepository, never()).persist(any(ItemEntity.class));
+            assertEquals("Item with ID " + itemId + " not found on the application", exception.getDetail());
+
+        }
+    }
+
+    @Nested
+    @DisplayName("updateItem() tests")
+    class updateItem {
+
+        @Test
+        @DisplayName("Should throw invalid edit parameter exception when no one field were updated")
+        void shouldThrowInvalidEditParameterWhenNoOneFieldWereUpdated() {
+
+            // Arrange
+            var itemId = 1L;
+            var orderId = 1L;
+            var updateReqDto = new UpdateItemRequestDto(null, null, null, null, null, null, orderId);
+
+            when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(orderEntityMock));
+            when(itemRepository.findByIdOptional(itemId)).thenReturn(Optional.of(itemEntityMock));
+
+            // Act & Assert
+            assertThrows(InvalidEditParameterException.class, () -> {
+                itemService.updateItem(itemId, updateReqDto);
+            });
+
+            verify(itemRepository, never()).persist(any(ItemEntity.class));
+        }
+
+        @Test
+        void updateItemWhenMixedNullAndValidValuesShouldUpdateOnlyValidFields() {
+            // Arrange
+            Long itemId = 1L;
+            Long orderId = 1L;
+
+            // Valores originais da entidade
+            String originalName = "NOME_ORIGINAL";
+            Integer originalQuantity = 1000;
+            String originalMaterial = "MATERIAL_ORIGINAL";
+            ItemStatus originalStatus = ItemStatus.IMPRESSO;
+
+            ItemEntity itemEntityMock = new ItemEntity();
+            itemEntityMock.setId(itemId);
+            itemEntityMock.setName(originalName);
+            itemEntityMock.setQuantity(originalQuantity);
+            itemEntityMock.setMaterial(originalMaterial);
+            itemEntityMock.setOrder(orderEntityMock);
+            itemEntityMock.setStatus(originalStatus);
+
+            String newName = "NOME_ATUALIZADO";
+            String newMaterial = "MATERIAL_ATUALIZADO";
+            var updateRequestDto = new UpdateItemRequestDto(newName, null, null, newMaterial, null, null, orderId);
+
+            when(itemRepository.findByIdOptional(itemId)).thenReturn(Optional.of(itemEntityMock));
+            when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(orderEntityMock));
+
+            // Act
+            itemService.updateItem(itemId, updateRequestDto);
+
+            // Assert
+
+            // 1. Verifique os campos que DEVERIAM ter mudado
+            assertEquals(newName, itemEntityMock.getName(), "O nome deveria ter sido atualizado.");
+            assertEquals(newMaterial, itemEntityMock.getMaterial(), "O material deveria ter sido atualizado.");
+
+            // 2. Verifique os campos que NÃO DEVERIAM ter mudado (pois eram nulos no DTO)
+            assertEquals(originalQuantity, itemEntityMock.getQuantity(), "A quantidade não deveria ter mudado.");
+            assertEquals(originalStatus, itemEntityMock.getStatus(), "O status não deveria ter mudado.");
+
+            // 3. Verifique se a persistência foi chamada
+            verify(itemRepository, times(1)).persist(itemEntityMock);
+        }
+    }
+
+    @Nested
+    @DisplayName("Should return list of items by status")
+    class findByStatus {
+
+        @Test
+        @DisplayName("Should return exception when status be null")
+        void shouldReturnExceptionWhenStatusIsNull() {
+
+            // Arrange
+            ItemStatus status = null;
+
+            // Act and Assert
+            NullPointerException exception = assertThrows(NullPointerException.class, () -> {
+                itemService.findByStatus(status);
+            });
+
+            assertEquals("ItemStatus must not be null", exception.getMessage());
+            verifyNoInteractions(itemRepository);
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no items match")
+        void shouldReturnEmptyListWhenNoItemsMatch() {
+
+            // Arrange
+            ItemStatus status = ItemStatus.IMPRESSO;
+            when(itemRepository.findByStatus(status)).thenReturn(Collections.emptyList());
+
+            // Act
+            var result = itemService.findByStatus(status);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(0, result.size());
+            verify(itemRepository).findByStatus(status);
+        }
+
+        @Test
+        @DisplayName("Should return a list with items whose match the status")
+        void shouldReturnAListOfItemsWhoseMatchTheStatus() {
+
+            // Arrange
+            ItemStatus status = ItemStatus.EM_SILK;
+            ItemEntity item1 = new ItemEntity(1L, "ITEM_1", 1000, 1000, "MATERIAL", "IMG_URL", ItemStatus.ACABAMENTO, orderEntityMock);
+            ItemEntity item2 = new ItemEntity(2L, "ITEM_2", 1000, 1000, "MATERIAL", "IMG_URL", ItemStatus.ACABAMENTO, orderEntityMock);
+
+            var items = Arrays.asList(item1, item2);
+            when(itemRepository.findByStatus(status)).thenReturn(items);
+
+            // Act
+            var result = itemService.findByStatus(status);
+
+            // Assert
+            assertEquals(2, result.size());
+
+            var response1 = result.getFirst();
+            assertEquals(response1.name(), item1.getName());
+            assertEquals(response1.itemStatus(), item1.getStatus());
+            assertEquals(response1.quantity(), item1.getQuantity());
+            assertEquals(response1.itemStatus(), item1.getStatus());
+            assertEquals(response1.image(), item1.getImage());
+            assertEquals(response1.material(), item1.getMaterial());
+            assertEquals(response1.orderId(), item1.getOrder().getId());
+
+            var response2 = result.get(1);
+            assertEquals(response2.name(), item2.getName());
+            assertEquals(response2.itemStatus(), item2.getStatus());
+            assertEquals(response2.quantity(), item2.getQuantity());
+            assertEquals(response2.itemStatus(), item2.getStatus());
+            assertEquals(response2.image(), item2.getImage());
+            assertEquals(response2.material(), item2.getMaterial());
+            assertEquals(response2.orderId(), item2.getOrder().getId());
+
+            verify(itemRepository).findByStatus(status);
+        }
+
+
     }
 }
