@@ -7,6 +7,7 @@ import dev.senna.controller.dto.request.UpdateUserDto;
 import dev.senna.exception.UserAlreadyExists;
 import dev.senna.exception.UserNotFoundException;
 import dev.senna.model.entity.UserEntity;
+import dev.senna.model.enums.UserRole;
 import dev.senna.repository.UserRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,7 +30,7 @@ public class UserService {
         var user = new UserEntity();
         user.setUsername(userReq.username());
         user.setPassword(BcryptUtil.bcryptHash(userReq.password()));
-        user.setRole("USER");
+        user.setRole(UserRole.OFFICER);
 
         userRepository.persist(user);
 
@@ -44,7 +45,7 @@ public class UserService {
         return users.stream()
                 .map(userEntity -> new ListUserResponse(
                         userEntity.getUsername(),
-                        userEntity.getRole()
+                        userEntity.getRole().getRoleName()
                 )).toList();
     }
 
@@ -63,7 +64,7 @@ public class UserService {
 
         user.setUsername(updateUserRequest.username());
         user.setPassword(BcryptUtil.bcryptHash(updateUserRequest.password()));
-        user.setRole(updateUserRequest.role());
+        user.setRole(UserRole.valueOf(updateUserRequest.role()));
 
         userRepository.persist(user);
 
