@@ -1,11 +1,13 @@
 package dev.senna.service;
 
 import dev.senna.controller.dto.request.CreateClientReqDto;
+import dev.senna.exception.ClientAlreadyExistsException;
 import dev.senna.model.entity.ClientEntity;
 import dev.senna.repository.ClientRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.awt.font.TextHitInfo;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -18,6 +20,10 @@ public class ClientService {
 
         ClientEntity clientEntity = new ClientEntity();
         clientEntity.setClientName(reqDto.clientName());
+
+        if (clientRepository.findByUserName(clientEntity.getClientName())) {
+            throw new ClientAlreadyExistsException(reqDto.clientName());
+        }
 
         clientRepository.persist(clientEntity);
 

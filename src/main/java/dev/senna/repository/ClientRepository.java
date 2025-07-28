@@ -8,4 +8,7 @@ import java.util.UUID;
 
 @ApplicationScoped
 public class ClientRepository implements PanacheRepositoryBase<ClientEntity, UUID> {
+    public boolean findByUserName(String clientName) {
+        return find("clientName", clientName).count() > 0;
+    }
 }

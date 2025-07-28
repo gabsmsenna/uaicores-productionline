@@ -1,11 +1,16 @@
 package dev.senna.service;
 
 import dev.senna.controller.dto.request.CreateClientReqDto;
+import dev.senna.exception.ClientAlreadyExistsException;
 import dev.senna.model.entity.ClientEntity;
+import dev.senna.model.entity.UserEntity;
 import dev.senna.repository.ClientRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,8 +19,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ClientServiceTest {
@@ -23,40 +27,60 @@ class ClientServiceTest {
     @InjectMocks
     ClientService clientService;
 
+    @Captor
+    private ArgumentCaptor<ClientEntity> clientCaptor;
+
     @Mock
     private ClientRepository clientRepository;
 
-    @Test
-    void createClient() {
+    @Nested
+    class createClient {
 
-        // 1. Cenário (Arrange)
-        String clientName = "John Doe";
-        CreateClientReqDto requestDto = new CreateClientReqDto(clientName);
+        @Test
+        @DisplayName("Should persist and return the clientId when client does not exists")
+        void shouldReturnClientIdWhenClientDoesNotExists() {
 
-        // Captura o argumento passado para o método persist
-        ArgumentCaptor<ClientEntity> clientEntityCaptor = ArgumentCaptor.forClass(ClientEntity.class);
+            // Arrange
+            String clientName = "CLIENT_NAME";
+            CreateClientReqDto requestDto = new CreateClientReqDto(clientName);
+            doReturn(false).when(clientRepository).findByUserName(clientName);
 
-        // Simula o comportamento do método persist para definir um ID no cliente
-        doAnswer(invocation -> {
-            ClientEntity entity = invocation.getArgument(0);
-            entity.setClientId(UUID.randomUUID()); // Simula a geração do ID pelo banco de dados
-            return null;
-        }).when(clientRepository).persist(any(ClientEntity.class));
+            doAnswer(invocation -> {
+                ClientEntity entity = invocation.getArgument(0);
+                entity.setClientId(UUID.randomUUID());
+                return null;
+            }).when(clientRepository).persist(any(ClientEntity.class));
 
-        // 2. Ação (Act)
-        UUID newClientId = clientService.createClient(requestDto);
+            // Act
+            UUID clientId = clientService.createClient(requestDto);
 
-        // 3. Verificação (Assert)
-        assertNotNull(newClientId, "O ID do cliente não deveria ser nulo.");
+            // Assert
+            assertNotNull(clientId);
+            verify(clientRepository, times(1)).findByUserName(requestDto.clientName());
+            verify(clientRepository, times(1)).persist(clientCaptor.capture());
+            var clientCaptured = clientCaptor.getValue();
+            assertEquals(clientName, clientCaptured.getClientName());
 
-        // Verifica se o método persist foi chamado exatamente uma vez
-        verify(clientRepository).persist(clientEntityCaptor.capture());
+        }
 
-        // Captura a entidade que foi "salva"
-        ClientEntity persistedClient = clientEntityCaptor.getValue();
+        @Test
+        @DisplayName("Should return true and throw exception when the client exists")
+        void shouldReturnTrueWhenTheClientExists() {
 
-        // Verifica se o nome do cliente na entidade está correto
-        assertEquals(clientName, persistedClient.getClientName(), "O nome do cliente na entidade persistida está incorreto.");
+            // Arrange
+            String clientName = "CLIENT_NAME";
+            CreateClientReqDto requestDto = new CreateClientReqDto(clientName);
+            doReturn(true).when(clientRepository).findByUserName(clientName);
 
+            // Act and Assert
+            var exception = assertThrows(ClientAlreadyExistsException.class, () -> {
+                clientService.createClient(requestDto);
+            });
+
+            // Assert
+            assertEquals("Client (" + clientName + ") already exists on database", exception.getDetail());
+            verify(clientRepository, times(1)).findByUserName(requestDto.clientName());
+            verify(clientRepository, never()).persist(any(ClientEntity.class));
+        }
     }
 }
