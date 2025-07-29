@@ -5,6 +5,7 @@ import dev.senna.controller.dto.request.UpdateItemRequestDto;
 import dev.senna.controller.dto.request.UpdateOrderReqDto;
 import dev.senna.controller.dto.response.*;
 import dev.senna.exception.ClientNotFoundException;
+import dev.senna.exception.ItemNotFoundException;
 import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.OrderStatus;
@@ -29,7 +30,8 @@ public class OrderService {
 
     public OrderEntity createOrder( @Valid CreateOrderReqDto reqDto) {
 
-        var client = clientRepository.findById(reqDto.clientId());
+        var client = clientRepository.findByIdOptional(reqDto.clientId())
+                .orElseThrow(() -> new ClientNotFoundException(reqDto.clientId()));
 
         OrderEntity order = new OrderEntity();
         order.setSaleDate(reqDto.saleDate());

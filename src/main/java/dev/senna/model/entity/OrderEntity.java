@@ -105,4 +105,12 @@ public class OrderEntity {
     public void setStatus(OrderStatus status) {
         this.status = status;
     }
+
+    public LocalDate getPostedDate() {
+        return postedDate;
+    }
+
+    public void setPostedDate(LocalDate postedDate) {
+        this.postedDate = postedDate;
+    }
 }

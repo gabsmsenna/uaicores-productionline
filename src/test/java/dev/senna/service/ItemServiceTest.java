@@ -30,15 +30,12 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-// 1. Substituímos @QuarkusTest pela anotação que ativa o Mockito para JUnit 5
 @ExtendWith(MockitoExtension.class)
 class ItemServiceTest {
 
-    // 2. @InjectMocks do Mockito cria a instância do serviço e injeta os mocks
     @InjectMocks
     private ItemService itemService;
 
-    // 3. @Mock do Mockito cria as dependências falsas (mocks)
     @Mock
     private ItemRepository itemRepository;
 
@@ -58,6 +55,7 @@ class ItemServiceTest {
         @Test
         @DisplayName("Should create an item associated of an order when orderId is valid")
         void shouldCreateAnItemAssociatedOfAnOrderWhenOrderIdIsValid() {
+
             // Arrange
             long orderId = 1L;
             var dummyDto = new AddItemRequestDto("ITEM_NAME", 1000, "MATERIAL", "IMG_URL", ItemStatus.IMPRESSO, orderId);
