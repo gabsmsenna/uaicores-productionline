@@ -24,7 +24,7 @@ public class UserService {
 
     public UUID createUser(CreateUserRequest userReq) {
         if (userRepository.existsByUsername(userReq.username())) {
-            throw new UserAlreadyExists("Username already in use");
+            throw new UserAlreadyExists(userReq.username());
         }
 
         var user = new UserEntity();

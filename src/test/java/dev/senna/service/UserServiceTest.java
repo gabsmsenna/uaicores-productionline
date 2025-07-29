@@ -6,6 +6,7 @@ import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.UserEntity;
 import dev.senna.model.enums.UserRole;
 import dev.senna.repository.UserRepository;
+import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -64,9 +65,10 @@ class UserServiceTest {
 
             assertNotNull(clientId);
             assertEquals(idGenerated, clientId);
-
             assertEquals(createUserRequest.username(), persistedUser.getUsername());
-            assertEquals(createUserRequest.password(), persistedUser.getPassword());
+
+            assertNotEquals(createUserRequest.password(), persistedUser.getPassword());
+            assertTrue(BcryptUtil.matches(createUserRequest.password(), persistedUser.getPassword()));
         }
 
         @Test

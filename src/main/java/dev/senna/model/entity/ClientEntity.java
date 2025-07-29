@@ -9,6 +9,15 @@ import java.util.UUID;
 @Table(name = "tb_client")
 public class ClientEntity {
 
+    public ClientEntity() {
+
+    }
+
+    public ClientEntity(UUID clientId, String clientName) {
+        this.clientId = clientId;
+        this.clientName = clientName;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID clientId;

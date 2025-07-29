@@ -30,7 +30,8 @@ public class UserEntity {
     @NotBlank
     private String password;
 
-    @Roles
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_role")
     private UserRole role;
 
     public UserEntity(UUID userId, String username, String password, UserRole role) {
@@ -47,6 +48,11 @@ public class UserEntity {
                 this.username,
                 this.role
         );
+    }
+
+    @Roles
+    public String getRoles() {
+        return this.role != null ? role.name() : null;
     }
 
     public UUID getUserId() {
