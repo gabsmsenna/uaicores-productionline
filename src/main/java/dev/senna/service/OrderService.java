@@ -108,7 +108,7 @@ public class OrderService {
                                 itemEntity.getStatus(),
                                 itemEntity.getOrder().getId()
                         )).toList(),
-                        orderEntity.getDeliveryDate()
+                        orderEntity.getPostedDate()
                 )).toList();
 
         return orderDtos;

@@ -275,6 +275,7 @@ class ItemServiceTest {
         }
 
         @Test
+        @DisplayName("Should only valid fields when mixed null and valid values")
         void updateItemWhenMixedNullAndValidValuesShouldUpdateOnlyValidFields() {
             // Arrange
             Long itemId = 1L;
@@ -305,7 +306,6 @@ class ItemServiceTest {
             itemService.updateItem(itemId, updateRequestDto);
 
             // Assert
-
             // 1. Verifique os campos que DEVERIAM ter mudado
             assertEquals(newName, itemEntityMock.getName(), "O nome deveria ter sido atualizado.");
             assertEquals(newMaterial, itemEntityMock.getMaterial(), "O material deveria ter sido atualizado.");
@@ -320,7 +320,7 @@ class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("Should return list of items by status")
+    @DisplayName("findByStatus() tests")
     class findByStatus {
 
         @Test
@@ -394,7 +394,5 @@ class ItemServiceTest {
 
             verify(itemRepository).findByStatus(status);
         }
-
-
     }
 }

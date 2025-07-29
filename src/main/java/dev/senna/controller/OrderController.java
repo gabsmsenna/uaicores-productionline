@@ -56,9 +56,9 @@ public class OrderController {
     public Response listLastSendOrders(@QueryParam("page") @DefaultValue("0") Integer page,
                                        @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
 
-        var lasSendOrders = orderService.listLastSendOrders(page, pageSize);
+        var lastSendOrders = orderService.listLastSendOrders(page, pageSize);
 
-        return Response.ok(lasSendOrders).build();
+        return Response.ok(lastSendOrders).build();
     }
 
     @PUT

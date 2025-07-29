@@ -24,7 +24,7 @@ public class OrderRepository implements PanacheRepositoryBase<OrderEntity, Long>
         Sort sort = Sort.by("deliveryDate", Sort.Direction.Descending)
                 .and("id", Sort.Direction.Descending);
 
-        var query = this.findAll(sort);
+        var query = this.find("status = ?1", sort, OrderStatus.POSTADO);
 
         query.page(Page.of(page, pageSize));
 

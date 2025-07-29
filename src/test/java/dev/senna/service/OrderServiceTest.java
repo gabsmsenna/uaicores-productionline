@@ -1,12 +1,11 @@
 package dev.senna.service;
 
-import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
 import dev.senna.controller.dto.request.CreateOrderReqDto;
 import dev.senna.exception.ClientNotFoundException;
-import dev.senna.exception.OrderNotFoundException;
 import dev.senna.model.entity.ClientEntity;
 import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
+import dev.senna.model.enums.ItemStatus;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.repository.ClientRepository;
 import dev.senna.repository.ItemRepository;
@@ -306,9 +305,107 @@ class OrderServiceTest {
             assertTrue(resultList.isEmpty());
             verify(orderRepository, times(1)).listOrdersInProduction(page, pageSize);
         }
-
-
-
     }
+
+    @Nested
+    @DisplayName("listLastSendOrders() tests")
+    class listLastSendOrders {
+
+        private OrderEntity orderEntity1;
+        private OrderEntity orderEntity2;
+
+        @BeforeEach
+        void setUp() {
+            // Setup client
+            ClientEntity clientEntity = new ClientEntity();
+            clientEntity.setClientName("CLIENT_NAME");
+
+            // Setup items
+            ItemEntity itemEntity1 = new ItemEntity();
+            itemEntity1.setName("ITEM_1");
+            itemEntity1.setQuantity(1000);
+            itemEntity1.setSaleQuantity(1000);
+            itemEntity1.setMaterial("MATERIAL");
+            itemEntity1.setImage("IMG_URL");
+            itemEntity1.setStatus(ItemStatus.EMBALADO);
+
+            ItemEntity itemEntity2 = new ItemEntity();
+            itemEntity2.setName("ITEM_2");
+            itemEntity2.setQuantity(5000);
+            itemEntity2.setSaleQuantity(5000);
+            itemEntity2.setMaterial("MATERIAL");
+            itemEntity2.setImage("IMG_URL_2");
+            itemEntity2.setStatus(ItemStatus.EMBALADO);
+
+            ItemEntity itemEntity3 = new ItemEntity();
+            itemEntity3.setName("ITEM_3");
+            itemEntity3.setQuantity(1000);
+            itemEntity3.setSaleQuantity(1000);
+            itemEntity3.setMaterial("MATERIAL");
+            itemEntity3.setImage("IMG_URL_3");
+            itemEntity3.setStatus(ItemStatus.EMBALADO);
+
+            ItemEntity itemEntity4 = new ItemEntity();
+            itemEntity4.setName("ITEM_4");
+            itemEntity4.setQuantity(2000);
+            itemEntity4.setSaleQuantity(2000);
+            itemEntity4.setMaterial("MATERIAL");
+            itemEntity4.setImage("IMG_URL_4");
+            itemEntity4.setStatus(ItemStatus.EMBALADO);
+
+
+            // Setup orders
+            orderEntity1 = new OrderEntity();
+            orderEntity1.setId(1L);
+            orderEntity1.setClient(clientEntity);
+            orderEntity1.setItems(List.of(itemEntity1, itemEntity2));
+            orderEntity1.setDeliveryDate(LocalDate.of(2024, 1, 15));
+            orderEntity1.setPostedDate(LocalDate.of(2024, 1, 19));
+
+            orderEntity2 = new OrderEntity();
+            orderEntity2.setId(2L);
+            orderEntity2.setClient(clientEntity);
+            orderEntity2.setItems(List.of(itemEntity1, itemEntity2));
+            orderEntity2.setDeliveryDate(LocalDate.of(2024, 1, 15));
+            orderEntity2.setPostedDate(LocalDate.of(2024, 1, 19));
+
+            // Link items to order
+            itemEntity1.setOrder(orderEntity1);
+            itemEntity2.setOrder(orderEntity1);
+            itemEntity3.setOrder(orderEntity2);
+            itemEntity4.setOrder(orderEntity2);
+        }
+
+        @Test
+        @DisplayName("Should return a paginated list of last send orders")
+        void shouldReturnAPaginatedListOfOrders() {
+
+            // Arrange
+            var page = 0;
+            var pageSize = 10;
+            var orderEntities = List.of(orderEntity1, orderEntity2);
+
+            when(orderRepository.findLastSent(page, pageSize)).thenReturn(mockPanache);
+            when(mockPanache.list()).thenReturn(orderEntities);
+
+            // Act
+            var result = orderService.listLastSendOrders(page, pageSize);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(2, result.size());
+
+            var orderRespDto =  result.getFirst();
+            assertEquals("CLIENT_NAME", orderRespDto.clientName());
+            assertEquals(LocalDate.of(2024, 1, 19), orderRespDto.sendDate());
+
+            var itemsRespDto = orderRespDto.items();
+            assertEquals(4, itemsRespDto.size());
+
+            verify(orderRepository).findLastSent(page, pageSize);
+            verify(mockPanache).list();
+        }
+    }
+
 
 }
