@@ -275,7 +275,7 @@ class ItemServiceTest {
         }
 
         @Test
-        @DisplayName("Should only valid fields when mixed null and valid values")
+        @DisplayName("Should update only valid fields when mixed null and valid values")
         void updateItemWhenMixedNullAndValidValuesShouldUpdateOnlyValidFields() {
             // Arrange
             Long itemId = 1L;

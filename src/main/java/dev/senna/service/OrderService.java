@@ -5,6 +5,8 @@ import dev.senna.controller.dto.request.UpdateItemRequestDto;
 import dev.senna.controller.dto.request.UpdateOrderReqDto;
 import dev.senna.controller.dto.response.*;
 import dev.senna.exception.ClientNotFoundException;
+import dev.senna.exception.InvalidDateException;
+import dev.senna.exception.InvalidEditOrderStatusParameterException;
 import dev.senna.exception.ItemNotFoundException;
 import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
@@ -17,7 +19,9 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @ApplicationScoped
 public class OrderService {
@@ -127,11 +131,53 @@ public class OrderService {
             orderToBeUpdated.setClient(client);
         }
 
+        validateDates(reqDto.saleDate(), reqDto.deliveryDate());
+        validateStatusTransition(orderToBeUpdated.getStatus(), reqDto.status());
+
         orderToBeUpdated.setStatus(reqDto.status());
 
         orderRepository.persist(orderToBeUpdated);
 
         return orderToBeUpdated;
+    }
+
+    private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+
+        Map<OrderStatus, OrderStatus> allowedEditingFlow = Map.of(
+                OrderStatus.PRODUCAO, OrderStatus.FINALIZADO,
+                OrderStatus.FINALIZADO, OrderStatus.POSTADO
+        );
+
+        OrderStatus expectedStatus = allowedEditingFlow.get(currentStatus);
+
+        if (expectedStatus == null) {
+            throw new InvalidEditOrderStatusParameterException("Actual status does not have editing parameter: " + currentStatus);
+        }
+
+        if (!expectedStatus.equals(newStatus)) {
+            throw new InvalidEditOrderStatusParameterException(
+                    String.format(
+                            "Transição inválida: %s → %s. O próximo status esperado é: %s",
+                            currentStatus, newStatus, expectedStatus
+                    )
+            );
+        }
+    }
+
+    private void validateDates(LocalDate saleDate, LocalDate deliveryDate) {
+        LocalDate today = LocalDate.now();
+
+        if (saleDate.isBefore(today)) {
+            throw new InvalidDateException("Sale date cannot be in the past.", saleDate);
+        }
+
+        if (deliveryDate.isBefore(today)) {
+            throw new InvalidDateException("Delivery Date cannot be in the past.", deliveryDate);
+        }
+
+        if (deliveryDate.isBefore(saleDate)) {
+            throw new InvalidDateException("Delivery date must be after sale date.", deliveryDate);
+        }
     }
 
 //    public List<ItemEntity> itemEntityMapper(List<UpdateItemRequestDto> items, OrderEntity orderToBeUpdated) {
