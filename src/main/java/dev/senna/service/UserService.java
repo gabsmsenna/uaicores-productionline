@@ -4,6 +4,7 @@ import dev.senna.controller.dto.request.CreateUserRequest;
 import dev.senna.controller.dto.response.ListUserResponse;
 import dev.senna.controller.dto.response.GetUserByIdResponse;
 import dev.senna.controller.dto.request.UpdateUserDto;
+import dev.senna.controller.dto.response.UpdateUserRespDto;
 import dev.senna.exception.UserAlreadyExists;
 import dev.senna.exception.UserNotFoundException;
 import dev.senna.model.entity.UserEntity;
@@ -52,15 +53,15 @@ public class UserService {
     public GetUserByIdResponse findUserById(UUID id) {
 
         var user = userRepository.findByIdOptional(id)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         return user.toResponse();
     }
 
-    public GetUserByIdResponse updateUser(UUID userId, UpdateUserDto updateUserRequest) {
+    public UpdateUserRespDto updateUser(UUID userId, UpdateUserDto updateUserRequest) {
 
         var user =  userRepository.findByIdOptional(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         user.setUsername(updateUserRequest.username());
         user.setPassword(BcryptUtil.bcryptHash(updateUserRequest.password()));
@@ -68,13 +69,13 @@ public class UserService {
 
         userRepository.persist(user);
 
-        return user.toResponse();
+        return new UpdateUserRespDto(user.getUsername(), user.getPassword(), user.getRole());
     }
 
     public void deleteUser(UUID userId) {
 
         var user = userRepository.findByIdOptional(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         userRepository.deleteById(user.getUserId());
     }

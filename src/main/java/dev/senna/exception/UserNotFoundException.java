@@ -4,14 +4,15 @@ import io.quarkiverse.resteasy.problem.HttpProblem;
 import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class UserNotFoundException extends HttpProblem  {
 
-    public UserNotFoundException() {
+    public UserNotFoundException(UUID userId) {
         super(builder()
                 .withTitle("User not found")
                 .withStatus(Response.Status.NOT_FOUND)
-                .withDetail("User with username not found in the system")
+                .withDetail("User not found on the system! UserID : " + userId )
                 .with("timestamp", LocalDateTime.now().toString()));
     }
 }
