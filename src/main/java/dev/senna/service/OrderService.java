@@ -42,7 +42,7 @@ public class OrderService {
     private static final int MAX_PAGE_SIZE = 100;
 
     @Transactional
-    public OrderEntity createOrder(@Valid CreateOrderReqDto reqDto) {
+    public Long createOrder(@Valid CreateOrderReqDto reqDto) {
         log.info("Iniciando criação de pedido para clienteId: {}", reqDto.clientId());
 
         try {
@@ -67,7 +67,7 @@ public class OrderService {
             log.info("Pedido criado com sucesso - ID: {}, Cliente: {}, Status: {}",
                     order.getId(), client.getClientName(), OrderStatus.PRODUCAO);
 
-            return order;
+            return order.getId();
 
         } catch (Exception e) {
             log.error("Erro ao criar pedido para clienteId: {} - Erro: {}",
@@ -97,7 +97,7 @@ public class OrderService {
                             orderEntity.getStatus()
                     )).toList();
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             log.error("Erro ao listar pedidos - página: {}, tamanho: {} - Erro: {}",
                     validatedPage, validatedPageSize, e.getMessage(), e);
             throw e;
@@ -215,7 +215,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderEntity updateOrder(Long orderId, @Valid UpdateOrderReqDto reqDto) {
+    public UpdateOrderResDto updateOrder(Long orderId, @Valid UpdateOrderReqDto reqDto) {
         log.info("Iniciando atualização do pedido ID: {} - Novo status: {}", orderId, reqDto.status());
 
         try {
@@ -275,7 +275,7 @@ public class OrderService {
             log.info("Pedido {} atualizado com sucesso - Status final: {}",
                     orderToBeUpdated.getId(), orderToBeUpdated.getStatus());
 
-            return orderToBeUpdated;
+            return new UpdateOrderResDto(orderToBeUpdated);
 
         } catch (Exception e) {
             log.error("Erro ao atualizar pedido ID: {} - Erro: {}", orderId, e.getMessage(), e);
