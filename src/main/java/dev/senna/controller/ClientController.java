@@ -21,7 +21,7 @@ import java.util.UUID;
 public class ClientController {
 
     @Inject
-    private ClientService clientService;
+    ClientService clientService;
 
     private static final Logger log = LoggerFactory.getLogger(ClientController.class);
 
@@ -49,6 +49,19 @@ public class ClientController {
             return Response.ok(clients).build();
         } catch (RuntimeException e) {
             log.error("API error during the findAllClients: {} ",  e.getMessage(), e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GET
+    @Path("/{clientId}")
+    public Response listClientById(@PathParam("clientId") UUID clientId) {
+
+        try {
+            log.debug("Received the request to list a specific client");
+            return Response.ok(clientService.findClientById(clientId)).build();
+        } catch (RuntimeException e) {
+            log.error("API error during the listClientById: {} ",  e.getMessage(), e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
     }
