@@ -115,7 +115,6 @@ class UserServiceTest {
             assertEquals(user2.getUsername(), resultList.getLast().userName());
             assertEquals(user1.getRole().getRoleName(), resultList.getFirst().role());
             assertEquals(user2.getRole().getRoleName(), resultList.getLast().role());
-
         }
     }
 }

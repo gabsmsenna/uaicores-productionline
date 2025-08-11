@@ -60,8 +60,8 @@ class OrderServiceTest {
         void shouldCreateAnOrderSuccessfully() {
 
             // Arrange
-            var saleDate = LocalDate.of(2025, 7, 28);
-            var deliveryDate = LocalDate.of(2025, 8, 3);
+            var saleDate = LocalDate.now();
+            var deliveryDate = saleDate.plusDays(5);
             var client = new ClientEntity(UUID.randomUUID(), "CLIENT_NAME");
             var createOrderReqDto = new CreateOrderReqDto(saleDate, deliveryDate, client.getClientId());
             when(clientRepository.findByIdOptional(client.getClientId())).thenReturn(Optional.of(client));
@@ -77,7 +77,7 @@ class OrderServiceTest {
             var orderPersisted = orderService.createOrder(createOrderReqDto);
 
             // Assert
-            assertNotNull(orderPersisted.getId());
+            assertNotNull(orderPersisted);
 
             verify(clientRepository, times(1)).findByIdOptional(client.getClientId());
             verify(orderRepository, times(1)).persist(orderEntityCaptor.capture());
@@ -87,8 +87,8 @@ class OrderServiceTest {
             assertEquals(saleDate, orderCaptured.getSaleDate());
             assertEquals(deliveryDate, orderCaptured.getDeliveryDate());
             assertEquals(client, orderCaptured.getClient());
-            assertEquals(expectedOrderId, orderPersisted.getId());
-            assertEquals(OrderStatus.PRODUCAO, orderPersisted.getStatus());
+            assertEquals(expectedOrderId, orderPersisted);
+            assertEquals(OrderStatus.PRODUCAO, orderCaptured.getStatus());
         }
 
         @Test
@@ -96,8 +96,8 @@ class OrderServiceTest {
         void shouldReturnClientNotFoundExceptionWhenClientIdDoesNotExistsOnDatabase() {
 
             // Arrange
-            var saleDate = LocalDate.of(2025, 7, 28);
-            var deliveryDate = LocalDate.of(2025, 8, 3);
+            var saleDate = LocalDate.now();
+            var deliveryDate = saleDate.plusDays(5);
             var client = new ClientEntity(UUID.randomUUID(), "CLIENT_NAME");
             var createOrderReqDto = new CreateOrderReqDto(saleDate, deliveryDate, client.getClientId());
             when(clientRepository.findByIdOptional(client.getClientId())).thenReturn(Optional.empty());
@@ -379,7 +379,7 @@ class OrderServiceTest {
 
         @Test
         @DisplayName("Should return a paginated list of last send orders")
-        void shouldReturnAPaginatedListOfOrders() {
+        void shouldReturnAPaginatedListOfLastSendOrders() {
 
             // Arrange
             var page = 0;
@@ -401,7 +401,7 @@ class OrderServiceTest {
             assertEquals(LocalDate.of(2024, 1, 19), orderRespDto.sendDate());
 
             var itemsRespDto = orderRespDto.items();
-            assertEquals(4, itemsRespDto.size());
+            assertEquals(2, itemsRespDto.size());
 
             verify(orderRepository).findLastSent(page, pageSize);
             verify(mockPanache).list();
@@ -419,38 +419,70 @@ class OrderServiceTest {
 
         @BeforeEach
         void setUp() {
-            actualOrder = new OrderEntity();
-            actualOrder.setId(1L);
-            actualOrder.setSaleDate(LocalDate.of(2025, 8, 7));
-            actualOrder.setPostedDate(LocalDate.now().plusDays(7));
-            actualOrder.setStatus(OrderStatus.PRODUCAO);
 
             clientEntity = new ClientEntity();
             clientId = UUID.randomUUID();
             clientEntity.setClientId(clientId);
             clientEntity.setClientName("CLIENT_NAME");
 
-            reqDto = new UpdateOrderReqDto(OrderStatus.FINALIZADO, LocalDate.now().plusDays(1), LocalDate.now().plusDays(3), clientId);
+            actualOrder = new OrderEntity();
+            actualOrder.setId(1L);
+            actualOrder.setSaleDate(LocalDate.now());
+            actualOrder.setPostedDate(actualOrder.getSaleDate().plusDays(5));
+            actualOrder.setStatus(OrderStatus.PRODUCAO);
+            actualOrder.setClient(clientEntity);
+
+            reqDto = new UpdateOrderReqDto(OrderStatus.FINALIZADO, LocalDate.now().plusDays(1), LocalDate.now().plusDays(3), clientEntity.getClientId());
         }
 
         @Test
-        @DisplayName("Should update an order successfully with valid data")
+        @DisplayName("Should update an order successfully with valid data when not changing client")
         void shouldUpdateAnOrderSuccessfully() {
 
             // Arrange
             Long orderId = 1L;
             when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(actualOrder));
-            when(clientRepository.findByIdOptional(clientId)).thenReturn(Optional.of(clientEntity));
 
             // Act
-            var orderUpdated = orderService.updateOrder(orderId, reqDto);
+            orderService.updateOrder(orderId, reqDto);
 
             // Assert
-            assertNotNull(orderUpdated);
-            assertEquals(orderUpdated.getStatus(), reqDto.status());
             verify(orderRepository).findByIdOptional(orderId);
-            verify(clientRepository).findByIdOptional(clientId);
-            verify(orderRepository).persist(actualOrder);
+            verify(orderRepository).persist(orderEntityCaptor.capture());
+            var capturedOrder = orderEntityCaptor.getValue();
+
+            assertNotNull(capturedOrder);
+            assertEquals(capturedOrder.getStatus(), reqDto.status());
+            assertEquals(reqDto.deliveryDate(), capturedOrder.getDeliveryDate());
+            assertEquals(clientEntity, capturedOrder.getClient()); // Verifica se o cliente foi trocado
+            assertEquals(orderId, capturedOrder.getId()); // O ID não deve mudar
+
+
+        }
+
+        @Test
+        @DisplayName("Should update an order successfully when changing to a new valid client")
+        void shouldUpdateAnOrderSuccessfullyWhenChangingToANewValidClient() {
+
+            // Arrange
+            Long orderId = 1L;
+
+            var newClient = new ClientEntity(UUID.randomUUID(), "NEW_CLIENT_NAME");
+            var reqDtoWithNewClient  = new UpdateOrderReqDto(OrderStatus.FINALIZADO, LocalDate.now().plusDays(1), LocalDate.now().plusDays(3), newClient.getClientId());
+
+            when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(actualOrder));
+            when(clientRepository.findByIdOptional(newClient.getClientId())).thenReturn(Optional.of(newClient));
+
+            // Act
+            orderService.updateOrder(orderId, reqDtoWithNewClient);
+
+            // Assert
+            verify(clientRepository).findByIdOptional(newClient.getClientId());
+            verify(orderRepository).persist(orderEntityCaptor.capture());
+            var capturedOrder = orderEntityCaptor.getValue();
+
+            assertNotNull(capturedOrder);
+            assertEquals(newClient, capturedOrder.getClient());
         }
 
         @Test
@@ -480,8 +512,10 @@ class OrderServiceTest {
 
             // Arrange
             Long orderId = 3L;
+            var nonExistentClientId = UUID.randomUUID();
+            reqDto = new UpdateOrderReqDto(OrderStatus.FINALIZADO, LocalDate.now().plusDays(1), LocalDate.now().plusDays(3), nonExistentClientId);
             when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(actualOrder));
-            when(clientRepository.findByIdOptional(clientId)).thenReturn(Optional.empty());
+            when(clientRepository.findByIdOptional(nonExistentClientId)).thenReturn(Optional.empty());
 
             // Act
             var exception = assertThrows(ClientNotFoundException.class, () -> {
@@ -489,9 +523,9 @@ class OrderServiceTest {
             });
 
             // Assert
-            assertEquals("Client with id " + clientId + " not found", exception.getDetail());
+            assertEquals("Client with id " + nonExistentClientId + " not found", exception.getDetail());
             verify(orderRepository).findByIdOptional(orderId);
-            verify(clientRepository).findByIdOptional(clientId);
+            verify(clientRepository).findByIdOptional(nonExistentClientId);
             verify(orderRepository, never()).persist(any(OrderEntity.class));
         }
 
@@ -508,13 +542,12 @@ class OrderServiceTest {
             );
 
             when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(actualOrder));
-            when(clientRepository.findByIdOptional(clientId)).thenReturn(Optional.of(clientEntity));
 
             var exception = assertThrows(InvalidDateException.class, () -> {
-                orderService.updateOrder(orderId, reqDto);
+                orderService.updateOrder(orderId, invalidReqDto);
             });
 
-            assertEquals("Sale date cannot be in the past.", exception.getMessage());
+            assertEquals("The specified date is not valid for this operation. " + invalidReqDto.saleDate(), exception.getDetail());
             verify(orderRepository, never()).persist(any(OrderEntity.class));
         }
 
@@ -523,6 +556,7 @@ class OrderServiceTest {
         void shouldThrowInvalidDateExceptionWhenDeliveryDateIsInThePast() {
 
             Long orderId = 1L;
+
             var invalidReqDto = new UpdateOrderReqDto(
                     OrderStatus.PRODUCAO,
                     LocalDate.now().plusDays(5),
@@ -531,13 +565,12 @@ class OrderServiceTest {
             );
 
             when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(actualOrder));
-            when(clientRepository.findByIdOptional(clientId)).thenReturn(Optional.of(clientEntity));
 
             var exception = assertThrows(InvalidDateException.class, () -> {
-                orderService.updateOrder(orderId, reqDto);
+                orderService.updateOrder(orderId, invalidReqDto);
             });
 
-            assertEquals("Delivery date must be after sale date.", exception.getMessage());
+            assertEquals("The specified date is not valid for this operation. " + invalidReqDto.deliveryDate(), exception.getDetail());
             verify(orderRepository, never()).persist(any(OrderEntity.class));
         }
 

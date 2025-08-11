@@ -5,6 +5,7 @@ import dev.senna.controller.dto.request.UpdateOrderReqDto;
 import dev.senna.controller.dto.response.UpdateOrderResDto;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.service.OrderService;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,10 +29,10 @@ import static org.mockito.Mockito.when;
 @DisplayName("OrderController Tests")
 class OrderControllerTest {
 
-    @InjectMocks OrderService orderService;
+    @InjectMock
+    OrderService orderService;
 
     private static final String BASE_PATH = "/order";
-
 
     @Nested
     @DisplayName("POST /order - createOrder")
@@ -60,7 +61,7 @@ class OrderControllerTest {
                     .then()
                     .statusCode(201)
                     .header("Location", notNullValue())
-                    .header("Location", response -> is(BASE_PATH + "/" + expectedOrderId));
+                    .header("Location",endsWith("/order/" + expectedOrderId));
         }
 
         @Test
