@@ -26,7 +26,7 @@ public class ClientEntity {
     private String clientName;
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderEntity> ordesList;
+    private List<OrderEntity> ordersList;
 
     public UUID getClientId() {
         return clientId;
@@ -44,8 +44,8 @@ public class ClientEntity {
         this.clientName = clientName;
     }
 
-    public List<OrderEntity> getOrdesList() {
-        return ordesList;
+    public List<OrderEntity> getOrdersList() {
+        return ordersList;
     }
 
 
