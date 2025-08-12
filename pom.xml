@@ -69,10 +69,6 @@
             <version>3.20.1</version>
         </dependency>
 
-        
-
-        
-
         <!-- Dependências de Teste -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -92,6 +88,11 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

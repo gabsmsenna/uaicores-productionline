@@ -12,6 +12,8 @@ import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.font.TextHitInfo;
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @ApplicationScoped
 public class ClientService {
 
+    private static final Logger log = LoggerFactory.getLogger(ClientService.class);
     @Inject
     private ClientRepository clientRepository;
 
@@ -29,6 +32,7 @@ public class ClientService {
         clientEntity.setClientName(reqDto.clientName());
 
         if (clientRepository.findByUserName(clientEntity.getClientName())) {
+            log.error("Client already exists with the name " + reqDto.clientName());
             throw new ClientAlreadyExistsException(reqDto.clientName());
         }
 
@@ -62,6 +66,7 @@ public class ClientService {
 
         if (!clientEntity.getClientName().equals(reqDto.clientName()) &&
                 clientRepository.findByUserName(reqDto.clientName())) {
+            log.error("Client already exists with the name " + reqDto.clientName());
             throw new ClientAlreadyExistsException(reqDto.clientName());
         }
 
@@ -77,6 +82,7 @@ public class ClientService {
                 .orElseThrow(() -> new ClientNotFoundException(clientId));
 
         if (clientEntity.getOrdersList() != null && !clientEntity.getOrdersList().isEmpty()) {
+            log.error("The client with id " + clientId + " has orders associated");
             throw new ClientHasOrdersException(
                     clientEntity.getClientId(),
                     clientEntity.getClientName()

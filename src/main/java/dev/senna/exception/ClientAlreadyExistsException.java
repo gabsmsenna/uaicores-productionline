@@ -9,7 +9,7 @@ public class ClientAlreadyExistsException extends HttpProblem {
     public ClientAlreadyExistsException(String clientName) {
         super(builder()
                 .withDetail("Client (" + clientName + ") already exists on database")
-                .withStatus(40)
+                .withStatus(400)
                 .withTitle("Client already exists")
                 .with("timestamp", LocalDateTime.now().toString()));
 
