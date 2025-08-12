@@ -2,14 +2,13 @@ package dev.senna.service;
 
 import dev.senna.controller.dto.request.CreateUserRequest;
 import dev.senna.controller.dto.request.UpdateUserDto;
-import dev.senna.exception.UserAlreadyExists;
+import dev.senna.exception.UserAlreadyExistsException;
 import dev.senna.exception.UserNotFoundException;
 import dev.senna.model.entity.UserEntity;
 import dev.senna.model.enums.UserRole;
 import dev.senna.repository.UserRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.panache.common.Page;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -63,7 +62,7 @@ class UserServiceTest {
             when(userRepository.existsByUsername(anyString())).thenReturn(true);
             var userRequest = new CreateUserRequest("testuser", "password");
 
-            assertThrows(UserAlreadyExists.class, () -> userService.createUser(userRequest));
+            assertThrows(UserAlreadyExistsException.class, () -> userService.createUser(userRequest));
         }
     }
 

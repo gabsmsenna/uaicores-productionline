@@ -5,9 +5,9 @@ import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDateTime;
 
-public class ItemAlreadyHasOrder extends HttpProblem {
+public class ItemAlreadyHasOrderException extends HttpProblem {
 
-    public ItemAlreadyHasOrder() {
+    public ItemAlreadyHasOrderException() {
         super(builder()
                 .withTitle("Item already has order")
                 .withStatus(Response.Status.CONFLICT)

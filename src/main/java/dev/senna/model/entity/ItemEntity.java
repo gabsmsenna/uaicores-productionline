@@ -1,13 +1,14 @@
 package dev.senna.model.entity;
 
 import dev.senna.model.enums.ItemStatus;
+import dev.senna.model.enums.Material;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tb_item")
 public class ItemEntity {
 
-    public ItemEntity(Long id, String name, Integer quantity, Integer saleQuantity, String material, String image, ItemStatus itemStatus, OrderEntity order) {
+    public ItemEntity(Long id, String name, Integer quantity, Integer saleQuantity, Material material, String image, ItemStatus itemStatus, OrderEntity order) {
         this.id = id;
         this.name = name;
         this.quantity = quantity;
@@ -32,7 +33,7 @@ public class ItemEntity {
     private Integer saleQuantity;
 
     @Column(name = "material", nullable = false )
-    private String material;
+    private Material material;
 
     @Column(name = "image")
     private String image;
@@ -81,11 +82,11 @@ public class ItemEntity {
         this.saleQuantity = saleQuantity;
     }
 
-    public String getMaterial() {
+    public Material getMaterial() {
         return material;
     }
 
-    public void setMaterial(String material) {
+    public void setMaterial(Material material) {
         this.material = material;
     }
 

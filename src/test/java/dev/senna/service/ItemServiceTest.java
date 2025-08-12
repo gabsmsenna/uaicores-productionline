@@ -10,6 +10,7 @@ import dev.senna.exception.OrderNotFoundException;
 import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.ItemStatus;
+import dev.senna.model.enums.Material;
 import dev.senna.repository.ItemRepository;
 import dev.senna.repository.OrderRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
@@ -58,7 +59,7 @@ class ItemServiceTest {
 
             // Arrange
             long orderId = 1L;
-            var dummyDto = new AddItemRequestDto("ITEM_NAME", 1000, "MATERIAL", "IMG_URL", ItemStatus.IMPRESSO, orderId);
+            var dummyDto = new AddItemRequestDto("ITEM_NAME", 1000, Material.LONA, "IMG_URL", orderId);
             var expectedItemId = 123L;
 
             var associatedOrder = new OrderEntity();
@@ -85,7 +86,7 @@ class ItemServiceTest {
         @DisplayName("Should create an item without association to an order when orderId is null")
         void shouldCreateAnItemWithoutAssociationToAnOrderWhenOrderIdIsNull() {
             // Arrange
-            var dummyDtoNoOrder = new AddItemRequestDto("ITEM_NAME_2", 1000, "MATERIAL", "IMG_URL_2", ItemStatus.IMPRESSO, null);
+            var dummyDtoNoOrder = new AddItemRequestDto("ITEM_NAME_2", 1000, Material.ELETROSTATICO, "IMG_URL_2", null);
             var expectedItemId = 456L;
 
             doAnswer(invocationOnMock -> {
@@ -284,7 +285,7 @@ class ItemServiceTest {
             // Valores originais da entidade
             String originalName = "NOME_ORIGINAL";
             Integer originalQuantity = 1000;
-            String originalMaterial = "MATERIAL_ORIGINAL";
+            Material originalMaterial = Material.ADESIVO;
             ItemStatus originalStatus = ItemStatus.IMPRESSO;
 
             ItemEntity itemEntityMock = new ItemEntity();
@@ -296,7 +297,7 @@ class ItemServiceTest {
             itemEntityMock.setStatus(originalStatus);
 
             String newName = "NOME_ATUALIZADO";
-            String newMaterial = "MATERIAL_ATUALIZADO";
+            Material newMaterial = Material.LONA;
             var updateRequestDto = new UpdateItemRequestDto(newName, null, null, newMaterial, null, null, orderId);
 
             when(itemRepository.findByIdOptional(itemId)).thenReturn(Optional.of(itemEntityMock));
@@ -362,8 +363,8 @@ class ItemServiceTest {
 
             // Arrange
             ItemStatus status = ItemStatus.EM_SILK;
-            ItemEntity item1 = new ItemEntity(1L, "ITEM_1", 1000, 1000, "MATERIAL", "IMG_URL", ItemStatus.ACABAMENTO, orderEntityMock);
-            ItemEntity item2 = new ItemEntity(2L, "ITEM_2", 1000, 1000, "MATERIAL", "IMG_URL", ItemStatus.ACABAMENTO, orderEntityMock);
+            ItemEntity item1 = new ItemEntity(1L, "ITEM_1", 1000, 1000, Material.ADESIVO, "IMG_URL", ItemStatus.ACABAMENTO, orderEntityMock);
+            ItemEntity item2 = new ItemEntity(2L, "ITEM_2", 1000, 1000, Material.ELETROSTATICO, "IMG_URL", ItemStatus.ACABAMENTO, orderEntityMock);
 
             var items = Arrays.asList(item1, item2);
             when(itemRepository.findByStatus(status)).thenReturn(items);

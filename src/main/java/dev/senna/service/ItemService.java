@@ -1,5 +1,6 @@
 package dev.senna.service;
 
+import dev.senna.controller.ClientController;
 import dev.senna.controller.dto.response.ListItemProductionLineResponse;
 import dev.senna.controller.dto.request.AddItemRequestDto;
 import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
@@ -13,6 +14,8 @@ import dev.senna.repository.ItemRepository;
 import dev.senna.repository.OrderRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,15 +29,21 @@ public class ItemService {
     @Inject
     private OrderRepository orderRepository;
 
+    private static final Logger log = LoggerFactory.getLogger(ClientController.class);
+
     public Long addItem(AddItemRequestDto reqDto) {
+
+        log.debug("Creating item");
 
         var item = new ItemEntity();
 
         if (reqDto.orderId() == null) {
+            log.info("Order id not provided");
             item.setOrder(null);
         } else {
             var order = orderRepository.findByIdOptional(reqDto.orderId())
                     .orElseThrow(() -> new OrderNotFoundException(reqDto.orderId()));
+            log.info("Item associated to order {} ", reqDto.orderId());
             item.setOrder(order);
         }
 
@@ -46,6 +55,8 @@ public class ItemService {
 
       itemRepository.persist(item);
 
+      log.info("Created Item {}", item);
+
       return item.getId();
     }
 
@@ -53,6 +64,7 @@ public class ItemService {
 
         var item = itemRepository.findByIdOptional(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(itemId));
+        log.info("Item founded with success!");
         return item;
     }
 
@@ -85,6 +97,7 @@ public class ItemService {
     }
 
     public void assignOrder(AssignOrderToItemRequestDto reqDto, Long itemId) {
+        log.debug("Assigning order ID {} to item ID {}", reqDto.orderId(), itemId);
 
         var order = orderRepository.findByIdOptional(reqDto.orderId())
                 .orElseThrow(() -> new OrderNotFoundException(reqDto.orderId()));
@@ -95,6 +108,8 @@ public class ItemService {
         item.setOrder(order);
 
         itemRepository.persist(item);
+
+        log.info("Item ID {} foi atribuído com sucesso ao pedido ID {}", item.getId(), order.getId());
     }
 
     public void updateItem(Long itemId, UpdateItemRequestDto reqDto) {
@@ -133,9 +148,10 @@ public class ItemService {
         }
 
         if (!isAnyFieldUpdated) {
+            log.error("Any field were updated! Probably the edit parameters is incorrect");
             throw new InvalidEditParameterException();
         }
-
+        log.info("Item updated successfully");
         itemRepository.persist(item);
     }
 

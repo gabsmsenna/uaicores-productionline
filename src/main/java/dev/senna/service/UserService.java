@@ -5,7 +5,7 @@ import dev.senna.controller.dto.response.ListUserResponse;
 import dev.senna.controller.dto.response.GetUserByIdResponse;
 import dev.senna.controller.dto.request.UpdateUserDto;
 import dev.senna.controller.dto.response.UpdateUserRespDto;
-import dev.senna.exception.UserAlreadyExists;
+import dev.senna.exception.UserAlreadyExistsException;
 import dev.senna.exception.UserNotFoundException;
 import dev.senna.model.entity.UserEntity;
 import dev.senna.model.enums.UserRole;
@@ -25,7 +25,7 @@ public class UserService {
 
     public UUID createUser(CreateUserRequest userReq) {
         if (userRepository.existsByUsername(userReq.username())) {
-            throw new UserAlreadyExists(userReq.username());
+            throw new UserAlreadyExistsException(userReq.username());
         }
 
         var user = new UserEntity();

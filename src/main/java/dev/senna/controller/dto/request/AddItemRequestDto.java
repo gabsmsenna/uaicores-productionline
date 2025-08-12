@@ -1,6 +1,7 @@
 package dev.senna.controller.dto.request;
 
 import dev.senna.model.enums.ItemStatus;
+import dev.senna.model.enums.Material;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -13,12 +14,10 @@ public record AddItemRequestDto(
         Integer saleQuantity,
 
         @NotBlank
-        String material,
+        Material material,
 
         @NotBlank
         String image,
-
-        ItemStatus itemStatus,
 
         Long orderId
 ) {}
