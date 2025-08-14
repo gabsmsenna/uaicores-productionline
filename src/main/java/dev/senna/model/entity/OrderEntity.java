@@ -40,22 +40,12 @@ public class OrderEntity {
     @Column(name = "order_status")
     private OrderStatus status;
 
-// --- Métodos Auxiliares para sincronizar a relação ---
-
-    /**
-     * Adiciona um item a esta ordem, garantindo a consistência bidirecional.
-     */
-    public void addItem(ItemEntity item) {
-        items.add(item);
-        item.setOrder(this);
+    public OrderEntity(OrderStatus orderStatus) {
+        this.status = orderStatus;
     }
 
-    /**
-     * Remove um item desta ordem, garantindo a consistência bidirecional.
-     */
-    public void removeItem(ItemEntity item) {
-        items.remove(item);
-        item.setOrder(null);
+    public OrderEntity() {
+
     }
 
     public Long getId() {

@@ -1,19 +1,16 @@
 package dev.senna.service;
 
 import dev.senna.controller.dto.request.CreateOrderReqDto;
-import dev.senna.controller.dto.request.UpdateItemRequestDto;
 import dev.senna.controller.dto.request.UpdateOrderReqDto;
 import dev.senna.controller.dto.response.*;
-import dev.senna.exception.ClientNotFoundException;
-import dev.senna.exception.InvalidDateException;
-import dev.senna.exception.InvalidEditOrderStatusParameterException;
-import dev.senna.exception.ItemNotFoundException;
-import dev.senna.model.entity.ItemEntity;
+import dev.senna.exception.*;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.repository.ClientRepository;
 import dev.senna.repository.OrderRepository;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Parameters;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -25,6 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @ApplicationScoped
 public class OrderService {
@@ -42,7 +40,7 @@ public class OrderService {
     private static final int MAX_PAGE_SIZE = 100;
 
     @Transactional
-    public Long createOrder(@Valid CreateOrderReqDto reqDto) {
+    public Long createOrder(@Valid CreateOrderReqDto reqDto) throws OrderServiceException {
         log.info("Iniciando criação de pedido para clienteId: {}", reqDto.clientId());
 
         try {
@@ -72,69 +70,45 @@ public class OrderService {
         } catch (Exception e) {
             log.error("Erro ao criar pedido para clienteId: {} - Erro: {}",
                     reqDto.clientId(), e.getMessage(), e);
-            throw e;
+            throw new OrderServiceException("Request to create a new order failed!", e);
         }
     }
 
-    public List<ListOrdersResponseDto> listOrders(Integer page, Integer pageSize) {
+    public List<ListOrdersResponseDto> listOrders(OrderStatus status, UUID clientId, Integer page, Integer pageSize) {
+
         int validatedPage = validatePage(page);
         int validatedPageSize = validatePageSize(pageSize);
 
-        log.debug("Listando pedidos - página: {}, tamanho: {}", validatedPage, validatedPageSize);
+        StringBuilder queryBuilder = new StringBuilder("SELECT o FROM OrderEntity o JOIN FETCH o.client c WHERE 1=1");
+        Parameters param = new Parameters();
 
-        try {
-            var orders = orderRepository.findAll()
-                    .page(Page.of(validatedPage, validatedPageSize))
-                    .list();
-
-            log.info("Encontrados {} pedidos na página {}", orders.size(), validatedPage);
-
-            return orders.stream()
-                    .map(orderEntity -> new ListOrdersResponseDto(
-                            orderEntity.getSaleDate(),
-                            orderEntity.getDeliveryDate(),
-                            orderEntity.getClient().getClientName(),
-                            orderEntity.getStatus()
-                    )).toList();
-
-        } catch (RuntimeException e) {
-            log.error("Erro ao listar pedidos - página: {}, tamanho: {} - Erro: {}",
-                    validatedPage, validatedPageSize, e.getMessage(), e);
-            throw e;
+        if (status != null) {
+            queryBuilder.append(" AND o.status = :status");
+            param.and("status", status);
         }
-    }
 
-    public List<ListOrdersResponseDto> listOrdersInProduction(Integer page, Integer pageSize) {
-        int validatedPage = validatePage(page);
-        int validatedPageSize = validatePageSize(pageSize);
-
-        log.debug("Listando pedidos em produção - página: {}, tamanho: {}", validatedPage, validatedPageSize);
-
-        try {
-            var orders = orderRepository.listOrdersInProduction(validatedPage, validatedPageSize);
-
-            log.info("Encontrados {} pedidos em produção na página {}", orders.size(), validatedPage);
-
-            return orders.stream()
-                    .map(orderEntity -> new ListOrdersResponseDto(
-                            orderEntity.getSaleDate(),
-                            orderEntity.getDeliveryDate(),
-                            orderEntity.getClient().getClientName(),
-                            orderEntity.getStatus()
-                    )).toList();
-
-        } catch (Exception e) {
-            log.error("Erro ao listar pedidos em produção - página: {}, tamanho: {} - Erro: {}",
-                    validatedPage, validatedPageSize, e.getMessage(), e);
-            throw e;
+        if (clientId != null) {
+            queryBuilder.append(" AND c.clientId = :clientId");
+            param.and("clientId", clientId);
         }
+
+        var orders = orderRepository.find(queryBuilder.toString(), Sort.by("saleDate").descending(), param)
+                .page(Page.of(validatedPage, validatedPageSize))
+                .list();
+
+        return orders.stream()
+                .map(order -> new ListOrdersResponseDto(order.getSaleDate(),
+                        order.getDeliveryDate(),
+                        order.getClient().getClientName(),
+                        order.getStatus()))
+                        .toList();
     }
 
     public List<ListOrderProductionResponseDto> listProduction(Integer page, Integer pageSize) {
         int validatedPage = validatePage(page);
         int validatedPageSize = validatePageSize(pageSize);
 
-        log.debug("Listando produção - página: {}, tamanho: {}", validatedPage, validatedPageSize);
+        log.debug("Listing actual production line - page: {}, size: {}", validatedPage, validatedPageSize);
 
         try {
             var orders = orderRepository.find("status", OrderStatus.PRODUCAO)
@@ -216,7 +190,8 @@ public class OrderService {
 
     @Transactional
     public UpdateOrderResDto updateOrder(Long orderId, @Valid UpdateOrderReqDto reqDto) {
-        log.info("Iniciando atualização do pedido ID: {} - Novo status: {}", orderId, reqDto.status());
+        log.info("Iniciando atualização do pedido ID: {} - Novos Parâmetros - Status: {} - Sale Date: {} - Delivery Date: {} - Client ID: {} ",
+                orderId, reqDto.status(), reqDto.saleDate(), reqDto.deliveryDate(), reqDto.clientId());
 
         try {
             var orderToBeUpdated = orderRepository.findByIdOptional(orderId)
@@ -408,7 +383,8 @@ public class OrderService {
     }
 
     public Map<OrderStatus, Long> getOrderStatistics() {
-        log.debug("Gerando estatísticas de pedidos");
+
+        log.debug("Getting order stastistics");
 
         try {
             Map<OrderStatus, Long> stats = Map.of(
@@ -422,24 +398,8 @@ public class OrderService {
 
         } catch (Exception e) {
             log.error("Erro ao gerar estatísticas de pedidos: {}", e.getMessage(), e);
-            throw e;
+            throw new OrderServiceException("Stastistics generation failed!", e);
         }
     }
 
-//    public List<ItemEntity> itemEntityMapper(List<UpdateItemRequestDto> items, OrderEntity orderToBeUpdated) {
-//       return items.stream()
-//                .map(itemDto -> {
-//                    ItemEntity newItem = new ItemEntity();
-//                    newItem.setName(itemDto.name());
-//                    newItem.setQuantity(itemDto.quantity());
-//                    newItem.setSaleQuantity(itemDto.saleQuantity());
-//                    newItem.setMaterial(itemDto.material());
-//                    newItem.setImage(itemDto.image());
-//                    newItem.setStatus(itemDto.itemStatus());
-//
-//                    newItem.setOrder(orderToBeUpdated);
-//
-//                    return newItem;
-//                }).toList();
-//    }
 }

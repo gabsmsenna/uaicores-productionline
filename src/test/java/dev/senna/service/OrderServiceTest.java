@@ -10,6 +10,7 @@ import dev.senna.model.entity.ClientEntity;
 import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.ItemStatus;
+import dev.senna.model.enums.Material;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.repository.ClientRepository;
 import dev.senna.repository.ItemRepository;
@@ -170,7 +171,7 @@ class OrderServiceTest {
             when(mockQuery.list()).thenReturn(mockOrderList);
 
             // Act
-            var result = orderService.listOrders(page, pageSize);
+            var result = orderService.listOrders(null, null, page, pageSize);
 
             // Assert
             assertNotNull(result);
@@ -204,7 +205,7 @@ class OrderServiceTest {
             when(mockPanache.list()).thenReturn(List.of());
 
             // Act
-            var result = orderService.listOrders(0, 10);
+            var result = orderService.listOrders(null, null,0, 10);
 
             // Assert
             assertNotNull(result);
@@ -230,7 +231,7 @@ class OrderServiceTest {
 
             // Act and Assert
             assertThrows(NullPointerException.class, () -> {
-                orderService.listOrders(page, pageSize);
+                orderService.listOrders(null, null, page, pageSize);
             });
 
         }
@@ -267,7 +268,7 @@ class OrderServiceTest {
             given(orderRepository.listOrdersInProduction(page, pageSize)).willReturn(mockOrderList);
 
             // Act
-            var resultList = orderService.listOrdersInProduction(0, 10);
+            var resultList = orderService.listOrders(null, null,0, 10);
 
             // Assert
             var dto1 = resultList.getFirst();
@@ -300,7 +301,7 @@ class OrderServiceTest {
             given(orderRepository.listOrdersInProduction(page, pageSize)).willReturn(Collections.emptyList());
 
             // Act
-            var resultList = orderService.listOrdersInProduction(page, pageSize);
+            var resultList = orderService.listProduction(page, pageSize);
 
             // Assert
             assertTrue(resultList.isEmpty());
@@ -326,7 +327,7 @@ class OrderServiceTest {
             itemEntity1.setName("ITEM_1");
             itemEntity1.setQuantity(1000);
             itemEntity1.setSaleQuantity(1000);
-            itemEntity1.setMaterial("MATERIAL");
+            itemEntity1.setMaterial(Material.ELETROSTATICO);
             itemEntity1.setImage("IMG_URL");
             itemEntity1.setStatus(ItemStatus.EMBALADO);
 
@@ -334,7 +335,7 @@ class OrderServiceTest {
             itemEntity2.setName("ITEM_2");
             itemEntity2.setQuantity(5000);
             itemEntity2.setSaleQuantity(5000);
-            itemEntity2.setMaterial("MATERIAL");
+            itemEntity2.setMaterial(Material.ADESIVO);
             itemEntity2.setImage("IMG_URL_2");
             itemEntity2.setStatus(ItemStatus.EMBALADO);
 
@@ -342,7 +343,7 @@ class OrderServiceTest {
             itemEntity3.setName("ITEM_3");
             itemEntity3.setQuantity(1000);
             itemEntity3.setSaleQuantity(1000);
-            itemEntity3.setMaterial("MATERIAL");
+            itemEntity3.setMaterial(Material.LONA);
             itemEntity3.setImage("IMG_URL_3");
             itemEntity3.setStatus(ItemStatus.EMBALADO);
 
@@ -350,7 +351,7 @@ class OrderServiceTest {
             itemEntity4.setName("ITEM_4");
             itemEntity4.setQuantity(2000);
             itemEntity4.setSaleQuantity(2000);
-            itemEntity4.setMaterial("MATERIAL");
+            itemEntity4.setMaterial(Material.BRANCO_FOSCO);
             itemEntity4.setImage("IMG_URL_4");
             itemEntity4.setStatus(ItemStatus.EMBALADO);
 

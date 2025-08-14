@@ -2,10 +2,12 @@ package dev.senna.controller;
 
 import dev.senna.controller.dto.request.CreateOrderReqDto;
 import dev.senna.controller.dto.request.UpdateOrderReqDto;
+import dev.senna.model.enums.OrderStatus;
 import dev.senna.service.OrderService;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -13,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.UUID;
 
 @Path("/order")
 @Produces(MediaType.APPLICATION_JSON)
@@ -26,29 +29,32 @@ public class OrderController {
 
     @POST
     @Transactional
-    public Response createOrder(@Valid CreateOrderReqDto reqDto) {
+    public Response createOrder(@Valid @NotNull CreateOrderReqDto reqDto) {
 
-        try {
-            var orderId = orderService.createOrder(reqDto);
-            return Response.created(URI.create("/order/" + orderId)).build();
-        } catch (Exception e) {
-            log.error("API error during the createOrder: {} ",  e.getMessage(), e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
+        log.info("Received request to create a new order - Client ID: {}, Sale Date: {}, Delivery Date: {}",
+                reqDto.clientId(), reqDto.saleDate(), reqDto.deliveryDate());
+
+        var orderId = orderService.createOrder(reqDto);
+
+        log.info("Order created successfully - ID: {}", orderId);
+
+        return Response.created(URI.create("/order/" + orderId)).build();
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listOrders( @QueryParam("page") @DefaultValue("0") Integer page,
-                                @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
+    public Response listOrders(@QueryParam("page") @DefaultValue("0") Integer page,
+                               @QueryParam("pageSize") @DefaultValue("10") Integer pageSize,
+                               @QueryParam("status") OrderStatus status,
+                               @QueryParam("clientId") UUID clientId) {
 
-        try {
-            var orders = orderService.listOrders(page, pageSize);
-            return Response.ok(orders).build();
-        } catch (Exception e) {
-            log.error("API error during the listOrders: {} ",  e.getMessage(), e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
+        log.info("Received request to list orders with filters: status={}, clientId={}", status, clientId);
+
+        var orders = orderService.listOrders(status, clientId, page, pageSize);
+
+        log.info("Orders listed successfully. Returning {} orders to page {}", orders.size(), page);
+
+        return Response.ok(orders).build();
     }
 
     @GET
@@ -56,14 +62,12 @@ public class OrderController {
     @Produces(MediaType.APPLICATION_JSON)
     public Response listOrdersProduction(@QueryParam("page") @DefaultValue("0") Integer page,
                                          @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
+        log.info("Received request to list orders in production");
 
-        try {
-            var ordersInProduction = orderService.listOrdersInProduction(page, pageSize);
-            return Response.ok(ordersInProduction).build();
-        } catch (Exception e) {
-            log.error("API error during the listOrdersInProduction: {} ",  e.getMessage(), e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
+        var ordersInProduction = orderService.listProduction(page, pageSize);
+
+        log.info("Returning {} orders in page {}", ordersInProduction.size(), page);
+        return Response.ok(ordersInProduction).build();
     }
 
     @GET
@@ -72,42 +76,35 @@ public class OrderController {
     public Response listLastSendOrders(@QueryParam("page") @DefaultValue("0") Integer page,
                                        @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
 
-        try {
-            var lastSendOrders = orderService.listLastSendOrders(page, pageSize);
-            return Response.ok(lastSendOrders).build();
-        } catch (Exception e) {
-            log.error("API error during the listLastSendOrders: {} ",  e.getMessage(), e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
+        log.info("Received request to list last send orders - Page: {}, PageSize: {}", page, pageSize);
+        var lastSendOrders = orderService.listLastSendOrders(page, pageSize);
+        log.info("Returning {} orders in page {}", lastSendOrders.size(), page);
+        return Response.ok(lastSendOrders).build();
     }
 
-    @PUT
+    @PATCH
     @Path("/{orderId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response updateOrder(@PathParam("orderId") Long orderId, @Valid UpdateOrderReqDto reqDto) {
-        log.debug("Received the request to update an order");
+    public Response updateOrder(@PathParam("orderId") Long orderId, @Valid @NotNull UpdateOrderReqDto reqDto) {
 
-        try {
-            return Response.ok(orderService.updateOrder(orderId, reqDto)).build();
-        } catch (Exception e) {
-            log.error("API error during the updateOrder: {} ",  e.getMessage(), e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
+        log.info("Received request to update an order with ID: {}", orderId);
+        var updatedOrder = orderService.updateOrder(orderId, reqDto);
+        log.info("Order ID: {} updated successfully", orderId);
+        return Response.ok(updatedOrder).build();
     }
 
     @GET
-    @Path("/order-statistics")
+    @Path("/statistics")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getOrderStatistics() {
-        log.debug("Received the request to generate order statistics");
 
-        try {
-            var stats = orderService.getOrderStatistics();
-            return Response.ok(stats).build();
-        } catch (Exception e) {
-            log.error("API error during the statistics generation: {} ",  e.getMessage(), e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-        }
+        log.info("Received request to get order statistics");
+
+        var stats = orderService.getOrderStatistics();
+
+        log.info("Returning order statistics");
+        return Response.ok(stats).build();
+
     }
 }
