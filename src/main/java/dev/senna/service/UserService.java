@@ -13,6 +13,8 @@ import dev.senna.repository.UserRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,29 +22,34 @@ import java.util.UUID;
 @ApplicationScoped
 public class UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
     @Inject
     private UserRepository userRepository;
 
     public UUID createUser(CreateUserRequest userReq) {
-        if (userRepository.existsByUsername(userReq.username())) {
-            throw new UserAlreadyExistsException(userReq.username());
-        }
+        log.info("Attempting to create a new user with username: {}", userReq.username());
+
+        verifyIfUsernameAlreadyInUse(userReq.username());
 
         var user = new UserEntity();
         user.setUsername(userReq.username());
-        user.setPassword(BcryptUtil.bcryptHash(userReq.password()));
+        user.setPassword(BcryptUtil.bcryptHash(userReq.password())); // A senha nunca é logada
         user.setRole(UserRole.OFFICER);
 
         userRepository.persist(user);
 
+        log.info("User {} created successfully with ID: {}", user.getUsername(), user.getUserId());
         return user.getUserId();
     }
 
     public List<ListUserResponse> findAll(Integer page, Integer pageSize) {
+        log.debug("Fetching all users with page: {} and pageSize: {}", page, pageSize);
         var users = userRepository.findAll()
                 .page(page, pageSize)
                 .list();
 
+        log.debug("Found {} users.", users.size());
         return users.stream()
                 .map(userEntity -> new ListUserResponse(
                         userEntity.getUsername(),
@@ -51,32 +58,57 @@ public class UserService {
     }
 
     public GetUserByIdResponse findUserById(UUID id) {
+        log.debug("Attempting to find user by ID: {}", id);
 
         var user = userRepository.findByIdOptional(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> {
+                    log.warn("User not found with ID: {}. Throwing UserNotFoundException.", id);
+                    return new UserNotFoundException(id);
+                });
 
+        log.debug("User found successfully with ID: {}", id);
         return user.toResponse();
     }
 
-    public UpdateUserRespDto updateUser(UUID userId, UpdateUserDto updateUserRequest) {
+    public void updateUser(UUID userId, UpdateUserDto updateUserRequest) {
+        log.info("Attempting to update user with ID: {}", userId);
 
-        var user =  userRepository.findByIdOptional(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+        var user = userRepository.findByIdOptional(userId)
+                .orElseThrow(() -> {
+                    log.warn("User not found for update with ID: {}. Throwing UserNotFoundException.", userId);
+                    return new UserNotFoundException(userId);
+                });
+
+        if (!user.getUsername().equals(updateUserRequest.username())) {
+            verifyIfUsernameAlreadyInUse(updateUserRequest.username());
+        }
 
         user.setUsername(updateUserRequest.username());
         user.setPassword(BcryptUtil.bcryptHash(updateUserRequest.password()));
-        user.setRole(UserRole.valueOf(updateUserRequest.role()));
 
         userRepository.persist(user);
 
-        return new UpdateUserRespDto(user.getUsername(), user.getPassword(), user.getRole());
+        log.info("User with ID: {} updated successfully.", userId);
     }
 
     public void deleteUser(UUID userId) {
+        log.info("Attempting to delete user with ID: {}", userId);
 
         var user = userRepository.findByIdOptional(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+                .orElseThrow(() -> {
+                    log.warn("User not found for deletion with ID: {}. Throwing UserNotFoundException.", userId);
+                    return new UserNotFoundException(userId);
+                });
 
         userRepository.deleteById(user.getUserId());
+        log.info("User with ID: {} deleted successfully.", userId);
+    }
+
+    public void verifyIfUsernameAlreadyInUse(String username) {
+        log.debug("Verifying if username '{}' is already in use.", username);
+        if (userRepository.existsByUsername(username)) {
+            log.warn("Username {} already exists. Throwing UserAlreadyExistsException.", username);
+            throw new UserAlreadyExistsException(username);
+        }
     }
 }

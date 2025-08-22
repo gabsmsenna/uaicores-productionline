@@ -33,6 +33,7 @@ public class ItemEntity {
     private Integer saleQuantity;
 
     @Column(name = "material", nullable = false )
+    @Enumerated(EnumType.STRING)
     private Material material;
 
     @Column(name = "image")

@@ -107,10 +107,10 @@ class OrderControllerTest {
     class ListOrderTests {
 
         @Test
-        @DisplayName("Should return 200 withi an order list")
+        @DisplayName("Should return 200 with an order list")
         void shouldReturn200WithiAnOrderList() {
 
-            when(orderService.listOrders(0, 10)).thenReturn(Collections.emptyList());
+            when(orderService.listOrders(null, null,0, 10)).thenReturn(Collections.emptyList());
 
             given()
                     .queryParam("page", 0)
@@ -128,7 +128,7 @@ class OrderControllerTest {
         @DisplayName("Should return 500 when internal server error is thrown")
         void shouldReturn500WhenInternalServerError() {
 
-            when(orderService.listOrders(0, 10))
+            when(orderService.listOrders(null, null,0, 10))
                     .thenThrow(new RuntimeException("Fail when trying to list orders"));
 
             given()
