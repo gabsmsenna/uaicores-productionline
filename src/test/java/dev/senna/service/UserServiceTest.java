@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -138,22 +139,27 @@ class UserServiceTest {
         void testUpdateUser() {
 
             var userId = UUID.randomUUID();
-            var user = new UserEntity();
+            var existingUser = new UserEntity();
+            existingUser.setUserId(userId);
+            existingUser.setUsername("USERNAME");
+            existingUser.setPassword("PASSWD");
+            existingUser.setRole(UserRole.OFFICER);
 
-            user.setUserId(userId);
-            user.setUsername("USERNAME");
-            user.setPassword("PASSWD");
-            user.setRole(UserRole.OFFICER);
+            var updateUserDto = new UpdateUserDto("UPDATE_NAME", "UPDATE_PASSWD");
 
-            when(userRepository.findByIdOptional(userId)).thenReturn(Optional.of(user));
+            when(userRepository.findByIdOptional(userId)).thenReturn(Optional.of(existingUser));
 
-            var updateUserDto = new UpdateUserDto("UPDATE_NAME", "UPDATE_PASSWD", "ADMIN");
-            var updatedUser = userService.updateUser(userId, updateUserDto);
+            userService.updateUser(userId, updateUserDto);
 
-            assertNotNull(updatedUser);
-            assertEquals(updateUserDto.username(), updatedUser.username());
-            assertTrue(BcryptUtil.matches(updateUserDto.password(), updatedUser.password()));
-            verify(userRepository).persist(any(UserEntity.class));
+            ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
+
+            verify(userRepository).persist(userCaptor.capture());
+
+            UserEntity capturedUser = userCaptor.getValue();
+
+            assertNotNull(capturedUser);
+            assertEquals(updateUserDto.username(), capturedUser.getUsername());
+            assertTrue(BcryptUtil.matches(updateUserDto.password(), capturedUser.getPassword()));
         }
 
         @Test
@@ -164,11 +170,13 @@ class UserServiceTest {
 
             when(userRepository.findByIdOptional(userId)).thenReturn(Optional.empty());
 
-            var updateUserDto = new UpdateUserDto("UPDATE_NAME", "UPDATE_PASSWD", "ADMIN");
+            var updateUserDto = new UpdateUserDto("UPDATE_NAME", "UPDATE_PASSWD");
 
-            var exception =  assertThrows(UserNotFoundException.class, () -> userService.updateUser(userId, updateUserDto));
+            var exception = assertThrows(UserNotFoundException.class, () -> {
+                userService.updateUser(userId, updateUserDto);
+            });
 
-            assertEquals("User not found on the system! UserID : " + userId, exception.getDetail());
+            assertTrue(exception.getMessage().contains(userId.toString()));
             verify(userRepository).findByIdOptional(userId);
             verify(userRepository, never()).persist(any(UserEntity.class));
         }

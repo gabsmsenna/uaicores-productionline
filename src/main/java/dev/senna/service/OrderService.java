@@ -43,7 +43,6 @@ public class OrderService {
     public Long createOrder(@Valid CreateOrderReqDto reqDto) throws OrderServiceException {
         log.info("Iniciando criação de pedido para clienteId: {}", reqDto.clientId());
 
-        try {
             validateDatesForCreation(reqDto.saleDate(), reqDto.deliveryDate());
 
             var client = clientRepository.findByIdOptional(reqDto.clientId())
@@ -66,12 +65,6 @@ public class OrderService {
                     order.getId(), client.getClientName(), OrderStatus.PRODUCAO);
 
             return order.getId();
-
-        } catch (Exception e) {
-            log.error("Erro ao criar pedido para clienteId: {} - Erro: {}",
-                    reqDto.clientId(), e.getMessage(), e);
-            throw new OrderServiceException("Request to create a new order failed!", e);
-        }
     }
 
     public List<ListOrdersResponseDto> listOrders(OrderStatus status, UUID clientId, Integer page, Integer pageSize) {

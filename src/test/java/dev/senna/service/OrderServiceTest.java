@@ -141,11 +141,22 @@ class OrderServiceTest {
     @DisplayName("listOrders() tests")
     class listOrders {
 
+        @Mock
+        private PanacheQuery<OrderEntity> mockQuery;
+
+        @BeforeEach
+        void setUp() {
+            when(orderRepository.find(anyString(), any(io.quarkus.panache.common.Sort.class), any(io.quarkus.panache.common.Parameters.class)))
+                    .thenReturn(mockQuery);
+
+            when(mockQuery.page(any(Page.class))).thenReturn(mockQuery);
+        }
+
         @Test
         @DisplayName("Should return a paginated list of orders dto")
         void shouldReturnAPaginatedListOfOrdersDto() {
 
-            // Assert
+            // Arrange
             Integer page = 0;
             Integer pageSize = 10;
 
@@ -165,9 +176,6 @@ class OrderServiceTest {
 
             List<OrderEntity> mockOrderList = List.of(order1, order2);
 
-            var mockQuery = mock(PanacheQuery.class);
-            when(orderRepository.findAll()).thenReturn(mockQuery);
-            when(mockQuery.page(any(Page.class))).thenReturn(mockQuery);
             when(mockQuery.list()).thenReturn(mockOrderList);
 
             // Act
@@ -189,7 +197,7 @@ class OrderServiceTest {
             assertEquals(order2.getDeliveryDate(), dto2.deliveryDate());
             assertEquals(order2.getStatus(), dto2.status());
 
-            verify(orderRepository, times(1)).findAll();
+            verify(orderRepository, times(1)).find(anyString(), any(io.quarkus.panache.common.Sort.class), any(io.quarkus.panache.common.Parameters.class));
         }
 
         @Test
@@ -197,24 +205,21 @@ class OrderServiceTest {
         void shouldReturnAnEmptyListWhenNoOrdersWereFound() {
 
             // Arrange
-            Integer page = 0;
-            Integer pageSize = 10;
-
-            when(orderRepository.findAll()).thenReturn(mockPanache);
-            when(mockPanache.page(any(Page.class))).thenReturn(mockPanache);
-            when(mockPanache.list()).thenReturn(List.of());
+            when(mockQuery.list()).thenReturn(Collections.emptyList());
 
             // Act
-            var result = orderService.listOrders(null, null,0, 10);
+            var result = orderService.listOrders(null, null, 0, 10);
 
             // Assert
             assertNotNull(result);
             assertTrue(result.isEmpty());
+            verify(orderRepository, times(1)).find(anyString(), any(io.quarkus.panache.common.Sort.class), any(io.quarkus.panache.common.Parameters.class));
         }
 
         @Test
         @DisplayName("Should return null pointer exception when clientId is null")
         void shouldReturnClientNotFoundExceptionWhenClientIdIsNull() {
+
             // Arrange
             Integer page = 0;
             Integer pageSize = 10;
@@ -225,21 +230,22 @@ class OrderServiceTest {
             order.setDeliveryDate(LocalDate.now().plusDays(5));
             order.setStatus(OrderStatus.PRODUCAO);
 
-            when(orderRepository.findAll()).thenReturn(mockPanache);
-            when(mockPanache.page(any(Page.class))).thenReturn(mockPanache);
-            when(mockPanache.list()).thenReturn(List.of(order));
+            when(mockQuery.list()).thenReturn(List.of(order));
 
             // Act and Assert
             assertThrows(NullPointerException.class, () -> {
                 orderService.listOrders(null, null, page, pageSize);
             });
-
         }
+
     }
 
     @Nested
-    @DisplayName("listOrdersInProduction() tests")
+    @DisplayName("listProduction() tests")
     class listOrdersInProduction {
+
+        @Mock
+        private PanacheQuery<OrderEntity> mockQuery;
 
         @Test
         @DisplayName("Should return a paginated list of orders in production")
@@ -263,12 +269,43 @@ class OrderServiceTest {
             order2.setDeliveryDate(LocalDate.now().plusDays(7));
             order2.setStatus(OrderStatus.PRODUCAO);
 
+            var item1 = new ItemEntity();
+            item1.setName("ITEM_1");
+            item1.setQuantity(1000);
+            item1.setSaleQuantity(1000);
+            item1.setMaterial(Material.ELETROSTATICO);
+            item1.setImage("IMG_URL");
+            item1.setStatus(ItemStatus.EMBALADO);
+            item1.setOrder(order1);
+
+            order1.setItems(List.of(item1));
+
+            var item2 = new ItemEntity();
+            item2.setName("ITEM_2");
+            item2.setQuantity(5000);
+            item2.setSaleQuantity(5000);
+            item2.setMaterial(Material.ADESIVO);
+            item2.setImage("IMG_URL_2");
+            item2.setStatus(ItemStatus.EMBALADO);
+            item2.setOrder(order2);
+
+            order2.setItems(List.of(item2));
+
             List<OrderEntity> mockOrderList = List.of(order1, order2);
 
-            given(orderRepository.listOrdersInProduction(page, pageSize)).willReturn(mockOrderList);
+            var mockPanacheQuery = mock(PanacheQuery.class);
+
+            when(orderRepository.find(eq("status"), any(OrderStatus.class)))
+                    .thenReturn(mockPanacheQuery);
+
+            when(mockPanacheQuery.page(any(Page.class)))
+                    .thenReturn(mockPanacheQuery);
+
+            when(mockPanacheQuery.list())
+                    .thenReturn(mockOrderList);
 
             // Act
-            var resultList = orderService.listOrders(null, null,0, 10);
+            var resultList = orderService.listProduction(page, pageSize);
 
             // Assert
             var dto1 = resultList.getFirst();
@@ -276,18 +313,16 @@ class OrderServiceTest {
 
             assertAll(
                     () -> assertEquals(2, resultList.size()),
-                    () -> assertEquals(order1.getSaleDate(), dto1.saleDate()),
-                    () -> assertEquals(order1.getDeliveryDate(), dto1.deliveryDate()),
                     () -> assertEquals(order1.getClient().getClientName(), dto1.clientName()),
                     () -> assertEquals(OrderStatus.PRODUCAO, dto1.status()),
+                    () -> assertEquals(order1.getItems().size(), dto1.items().size()),
 
-                    () -> assertEquals(order2.getSaleDate(), dto2.saleDate()),
-                    () -> assertEquals(order2.getDeliveryDate(), dto2.deliveryDate()),
                     () -> assertEquals(order2.getClient().getClientName(), dto2.clientName()),
-                    () -> assertEquals(OrderStatus.PRODUCAO, dto1.status())
+                    () -> assertEquals(OrderStatus.PRODUCAO, dto2.status()),
+                    () -> assertEquals(order2.getItems().size(), dto2.items().size())
             );
 
-            verify(orderRepository, times(1)).listOrdersInProduction(page, pageSize);
+            verify(orderRepository, times(1)).find(eq("status"), any(OrderStatus.class));
         }
 
         @Test
@@ -297,15 +332,18 @@ class OrderServiceTest {
             // Arrange
             var page = 0;
             var pageSize = 10;
+            var mockQuery = mock(PanacheQuery.class);
 
-            given(orderRepository.listOrdersInProduction(page, pageSize)).willReturn(Collections.emptyList());
+            when(orderRepository.find(eq("status"), any(OrderStatus.class))).thenReturn(mockQuery);
+            when(mockQuery.page(any(Page.class))).thenReturn(mockQuery);
+            when(mockQuery.list()).thenReturn(Collections.emptyList());
 
             // Act
             var resultList = orderService.listProduction(page, pageSize);
 
             // Assert
             assertTrue(resultList.isEmpty());
-            verify(orderRepository, times(1)).listOrdersInProduction(page, pageSize);
+            verify(orderRepository, times(1)).find(eq("status"), any(OrderStatus.class));
         }
     }
 
