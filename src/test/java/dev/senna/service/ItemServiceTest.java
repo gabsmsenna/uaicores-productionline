@@ -14,6 +14,9 @@ import dev.senna.model.enums.Material;
 import dev.senna.repository.ItemRepository;
 import dev.senna.repository.OrderRepository;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.security.ForbiddenException;
+import io.quarkus.security.identity.SecurityIdentity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -23,10 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -48,6 +48,9 @@ class ItemServiceTest {
 
     @Mock
     private ItemEntity itemEntityMock;
+
+    @Mock
+    private SecurityIdentity identity;
 
     @Nested
     @DisplayName("addItem() tests")
@@ -264,6 +267,7 @@ class ItemServiceTest {
             var orderId = 1L;
             var updateReqDto = new UpdateItemRequestDto(null, null, null, null, null, null, orderId);
 
+            when(identity.getRoles()).thenReturn(Set.of("ADMIN"));
             when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(orderEntityMock));
             when(itemRepository.findByIdOptional(itemId)).thenReturn(Optional.of(itemEntityMock));
 
@@ -277,12 +281,11 @@ class ItemServiceTest {
 
         @Test
         @DisplayName("Should update only valid fields when mixed null and valid values")
-        void updateItemWhenMixedNullAndValidValuesShouldUpdateOnlyValidFields() {
+        void shouldUpdateOnlyValidFieldsItemWhenMixedNullAndValidValuesWhenUserIsAdmin() {
             // Arrange
             Long itemId = 1L;
             Long orderId = 1L;
 
-            // Valores originais da entidade
             String originalName = "NOME_ORIGINAL";
             Integer originalQuantity = 1000;
             Material originalMaterial = Material.ADESIVO;
@@ -300,6 +303,7 @@ class ItemServiceTest {
             Material newMaterial = Material.LONA;
             var updateRequestDto = new UpdateItemRequestDto(newName, null, null, newMaterial, null, null, orderId);
 
+            when(identity.getRoles()).thenReturn(Set.of("ADMIN"));
             when(itemRepository.findByIdOptional(itemId)).thenReturn(Optional.of(itemEntityMock));
             when(orderRepository.findByIdOptional(orderId)).thenReturn(Optional.of(orderEntityMock));
 
@@ -307,7 +311,6 @@ class ItemServiceTest {
             itemService.updateItem(itemId, updateRequestDto);
 
             // Assert
-            // 1. Verifique os campos que DEVERIAM ter mudado
             assertEquals(newName, itemEntityMock.getName(), "O nome deveria ter sido atualizado.");
             assertEquals(newMaterial, itemEntityMock.getMaterial(), "O material deveria ter sido atualizado.");
 
@@ -318,6 +321,103 @@ class ItemServiceTest {
             // 3. Verifique se a persistência foi chamada
             verify(itemRepository, times(1)).persist(itemEntityMock);
         }
+
+        @Test
+        @DisplayName("Should update all fields when user is an admin")
+        void shouldUpdateAllFieldsWhenUserIsAdmin() {
+
+            itemEntityMock = new ItemEntity();
+            itemEntityMock.setId(1L);
+            itemEntityMock.setName("ITEM_NAME");
+            itemEntityMock.setQuantity(1000);
+            itemEntityMock.setMaterial(Material.ADESIVO);
+            itemEntityMock.setStatus(ItemStatus.IMPRESSO);
+
+            when(itemRepository.findByIdOptional(itemEntityMock.getId())).thenReturn(Optional.of(itemEntityMock));
+            when(orderRepository.findByIdOptional(any(Long.class))).thenReturn(Optional.of(new OrderEntity()));
+            when(identity.getRoles()).thenReturn(Set.of("ADMIN"));
+
+            var reqDto = new UpdateItemRequestDto(
+                    "NEW_NAME",
+                    950,
+                    1050,
+                    Material.LONA,
+                    "NEW_URL",
+                    ItemStatus.ACABAMENTO,
+                    100L
+            );
+
+            itemService.updateItem(itemEntityMock.getId(), reqDto);
+
+            assertEquals(reqDto.name(), itemEntityMock.getName());
+            assertEquals(reqDto.quantity(), itemEntityMock.getQuantity());
+            assertEquals(reqDto.material(), itemEntityMock.getMaterial());
+            assertEquals(reqDto.saleQuantity(), itemEntityMock.getSaleQuantity());
+            assertEquals(reqDto.itemStatus(), itemEntityMock.getStatus());
+            assertEquals(reqDto.orderId(), itemEntityMock.getId());
+            verify(itemRepository, times(1)).persist(itemEntityMock);
+        }
+
+        @Test
+        @DisplayName("Should update all fields when user is an officer")
+        void shouldUpdateAllFieldsWhenUserIsOfficer() {
+
+            itemEntityMock = new ItemEntity();
+            itemEntityMock.setId(1L);
+            itemEntityMock.setName("ITEM_NAME");
+            itemEntityMock.setQuantity(1000);
+            itemEntityMock.setMaterial(Material.ADESIVO);
+            itemEntityMock.setStatus(ItemStatus.IMPRESSO);
+
+            when(itemRepository.findByIdOptional(itemEntityMock.getId())).thenReturn(Optional.of(itemEntityMock));
+            when(orderRepository.findByIdOptional(any(Long.class))).thenReturn(Optional.of(new OrderEntity()));
+            when(identity.getRoles()).thenReturn(Set.of("OFFICER"));
+
+            var reqDto = new UpdateItemRequestDto(
+                    null,
+                    950,
+                    null,
+                    null,
+                    null,
+                    ItemStatus.ENCARTELADO,
+                    null
+            );
+
+            itemService.updateItem(itemEntityMock.getId(), reqDto);
+
+            assertEquals(reqDto.quantity(), itemEntityMock.getQuantity());
+            assertEquals(reqDto.itemStatus(), itemEntityMock.getStatus());
+            verify(itemRepository, times(1)).persist(itemEntityMock);
+        }
+
+        @Test
+        void shouldThrowsExceptionWhenOfficerTryToUpdateNotAllowedField() {
+
+            itemEntityMock = new ItemEntity();
+            itemEntityMock.setId(1L);
+            itemEntityMock.setName("ITEM_NAME");
+            itemEntityMock.setQuantity(1000);
+            itemEntityMock.setMaterial(Material.ADESIVO);
+            itemEntityMock.setStatus(ItemStatus.IMPRESSO);
+
+            when(itemRepository.findByIdOptional(10L)).thenReturn(Optional.of(itemEntityMock));
+            when(orderRepository.findByIdOptional(any())).thenReturn(Optional.of(new OrderEntity()));
+            when(identity.getRoles()).thenReturn(Set.of("OFFICER"));
+
+            UpdateItemRequestDto reqDto = new UpdateItemRequestDto(
+                    "NEW_NAME", // OFFICER não pode alterar
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    10L
+            );
+
+            assertThrows(ForbiddenException.class, () -> itemService.updateItem(10L, reqDto));
+            verify(itemRepository, never()).persist(any(ItemEntity.class));
+        }
+
     }
 
     @Nested
