@@ -5,6 +5,7 @@ import dev.senna.controller.dto.request.AssignOrderToItemRequestDto;
 import dev.senna.controller.dto.request.UpdateItemRequestDto;
 import dev.senna.model.enums.ItemStatus;
 import dev.senna.service.ItemService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class ItemController {
 
     @POST
     @Transactional
+    @RolesAllowed({"ADMIN"})
     public Response createItem( @Valid  AddItemRequestDto reqDto) {
 
         log.debug("Received request do create an item");
@@ -45,6 +47,7 @@ public class ItemController {
 
     @GET
     @Path("/{itemId}")
+    @RolesAllowed({"ADMIN","OFFICER"})
     public Response findItemById(@PathParam("itemId") Long itemId) {
         log.debug("Received request find item by id {}", itemId);
         return Response.ok(itemService.findItemById(itemId)).build();
@@ -53,6 +56,7 @@ public class ItemController {
     @PATCH
     @Path("/{itemId}/order")
     @Transactional
+    @RolesAllowed({"ADMIN"})
     public Response assignOrder( @PathParam("itemId") Long itemId, @Valid AssignOrderToItemRequestDto reqDto ) {
         log.debug("Received request assign order to an item {}", itemId);
         itemService.assignOrder(reqDto, itemId);
@@ -62,6 +66,7 @@ public class ItemController {
     @PATCH
     @Path("/{itemId}")
     @Transactional
+    @RolesAllowed({"ADMIN","OFFICER"})
     public Response updateItem(@PathParam("itemId") Long itemId, @Valid UpdateItemRequestDto reqDto) {
         log.info("Received request update an item {}", itemId);
         itemService.updateItem(itemId, reqDto);
@@ -70,20 +75,7 @@ public class ItemController {
 
     @GET
     @Path("/search")
-    @Operation(
-            summary = "Search for items by status",
-            description = "Returns a list of items that match the given status filter."
-    )
-    @APIResponse(
-            responseCode = "200",
-            description = "List of items found",
-            content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = AbstractReadWriteAccess.Item.class, type = org.eclipse.microprofile.openapi.annotations.enums.SchemaType.ARRAY))
-    )
-    @APIResponse(
-            responseCode = "400",
-            description = "Invalid input, e.g., missing or unknown status"
-    )
+    @RolesAllowed({"ADMIN","OFFICER"})
     public Response searchItemByStatus(
             @QueryParam("status") @NotNull(message = "Query param 'status' should not be null") ItemStatus status
             ) {

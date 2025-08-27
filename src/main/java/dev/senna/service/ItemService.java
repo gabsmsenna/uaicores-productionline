@@ -12,6 +12,8 @@ import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.enums.ItemStatus;
 import dev.senna.repository.ItemRepository;
 import dev.senna.repository.OrderRepository;
+import io.quarkus.security.ForbiddenException;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
@@ -28,6 +30,9 @@ public class ItemService {
 
     @Inject
     private OrderRepository orderRepository;
+
+    @Inject
+    SecurityIdentity identity;
 
     private static final Logger log = LoggerFactory.getLogger(ClientController.class);
 
@@ -113,47 +118,82 @@ public class ItemService {
     }
 
     public void updateItem(Long itemId, UpdateItemRequestDto reqDto) {
-
         var item = itemRepository.findByIdOptional(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(itemId));
 
         orderRepository.findByIdOptional(reqDto.orderId())
                 .orElseThrow(() -> new OrderNotFoundException(reqDto.orderId()));
 
-        boolean isAnyFieldUpdated = false;
+        var roles = identity.getRoles();
 
-        if (reqDto.name() != null) {
-            item.setName(reqDto.name());
-            isAnyFieldUpdated = true;
+        boolean updated = false;
+
+        if (roles.contains("ADMIN")) {
+            updated = applyAdminUpdates(item, reqDto);
+        } else if (roles.contains("OFFICER")) {
+            updated = applyOfficerUpdates(item, reqDto);
+        } else {
+            log.warn("Usuário sem permissão tentou atualizar item ID: {}", itemId);
+            throw new ForbiddenException("Você não possui permissão para atualizar este item");
         }
+
+        if (!updated) {
+            log.error("Nenhum campo válido para update foi informado no item ID: {}", itemId);
+            throw new InvalidEditParameterException();
+        }
+
+        log.info("Item ID {} atualizado com sucesso pelo usuário {} - Novos valores: {}",
+                itemId, identity.getPrincipal().getName(), item);
+    }
+
+    private boolean applyOfficerUpdates(ItemEntity item, UpdateItemRequestDto reqDto) {
+
+        boolean updated = false;
+
         if (reqDto.quantity() != null) {
             item.setQuantity(reqDto.quantity());
-            isAnyFieldUpdated = true;
-        }
-        if (reqDto.saleQuantity() != null) {
-            item.setSaleQuantity(reqDto.saleQuantity());
-            isAnyFieldUpdated = true;
-        }
-        if (reqDto.material() != null) {
-            item.setMaterial(reqDto.material());
-            isAnyFieldUpdated = true;
-        }
-        if (reqDto.image() != null) {
-            item.setImage(reqDto.image());
-            isAnyFieldUpdated = true;
+            updated = true;
         }
         if (reqDto.itemStatus() != null) {
             item.setStatus(reqDto.itemStatus());
-            isAnyFieldUpdated = true;
+            updated = true;
         }
 
-        if (!isAnyFieldUpdated) {
-            log.error("Any field were updated! Probably the edit parameters is incorrect");
-            throw new InvalidEditParameterException();
-        }
-        log.info("Item updated successfully");
-        itemRepository.persist(item);
+        return updated;
     }
+
+    private boolean applyAdminUpdates(ItemEntity item, UpdateItemRequestDto reqDto) {
+
+        boolean updated = false;
+
+        if (reqDto.name() != null) {
+            item.setName(reqDto.name());
+            updated = true;
+        }
+        if (reqDto.quantity() != null) {
+            item.setQuantity(reqDto.quantity());
+            updated = true;
+        }
+        if (reqDto.saleQuantity() != null) {
+            item.setSaleQuantity(reqDto.saleQuantity());
+            updated = true;
+        }
+        if (reqDto.material() != null) {
+            item.setMaterial(reqDto.material());
+            updated = true;
+        }
+        if (reqDto.image() != null) {
+            item.setImage(reqDto.image());
+            updated = true;
+        }
+        if (reqDto.itemStatus() != null) {
+            item.setStatus(reqDto.itemStatus());
+            updated = true;
+        }
+
+        return updated;
+    }
+
 
     public List<ListItemProductionLineResponse> findByStatus(ItemStatus status) {
 

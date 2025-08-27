@@ -4,6 +4,7 @@ import dev.senna.controller.dto.request.CreateOrderReqDto;
 import dev.senna.controller.dto.request.UpdateOrderReqDto;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.service.OrderService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ public class OrderController {
 
     @POST
     @Transactional
+    @RolesAllowed({"ADMIN"})
     public Response createOrder(@Valid @NotNull CreateOrderReqDto reqDto) {
 
         log.info("Received request to create a new order - Client ID: {}, Sale Date: {}, Delivery Date: {}",
@@ -43,6 +45,7 @@ public class OrderController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"ADMIN","OFFICER"})
     public Response listOrders(@QueryParam("page") @DefaultValue("0") Integer page,
                                @QueryParam("pageSize") @DefaultValue("10") Integer pageSize,
                                @QueryParam("status") OrderStatus status,
@@ -60,6 +63,7 @@ public class OrderController {
     @GET
     @Path("/production")
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"ADMIN","OFFICER"})
     public Response listOrdersProduction(@QueryParam("page") @DefaultValue("0") Integer page,
                                          @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
         log.info("Received request to list orders in production");
@@ -73,6 +77,7 @@ public class OrderController {
     @GET
     @Path("/last-send-orders")
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"ADMIN","OFFICER"})
     public Response listLastSendOrders(@QueryParam("page") @DefaultValue("0") Integer page,
                                        @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
 
@@ -86,6 +91,7 @@ public class OrderController {
     @Path("/{orderId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
+    @RolesAllowed({"ADMIN","OFFICER"})
     public Response updateOrder(@PathParam("orderId") Long orderId, @Valid @NotNull UpdateOrderReqDto reqDto) {
 
         log.info("Received request to update an order with ID: {}", orderId);
@@ -97,6 +103,7 @@ public class OrderController {
     @GET
     @Path("/statistics")
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"ADMIN","OFFICER"})
     public Response getOrderStatistics() {
 
         log.info("Received request to get order statistics");
