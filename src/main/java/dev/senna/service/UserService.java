@@ -34,7 +34,7 @@ public class UserService {
 
         var user = new UserEntity();
         user.setUsername(userReq.username());
-        user.setPassword(BcryptUtil.bcryptHash(userReq.password())); // A senha nunca é logada
+        user.setPassword(BcryptUtil.bcryptHash(userReq.password()));
         user.setRole(UserRole.OFFICER);
 
         userRepository.persist(user);
@@ -106,6 +106,9 @@ public class UserService {
 
     public void verifyIfUsernameAlreadyInUse(String username) {
         log.debug("Verifying if username '{}' is already in use.", username);
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty.");
+        }
         if (userRepository.existsByUsername(username)) {
             log.warn("Username {} already exists. Throwing UserAlreadyExistsException.", username);
             throw new UserAlreadyExistsException(username);

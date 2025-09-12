@@ -4,6 +4,7 @@ import dev.senna.controller.dto.request.CreateUserRequest;
 import dev.senna.controller.dto.request.UpdateUserDto;
 import dev.senna.service.ClientService;
 import dev.senna.service.UserService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
@@ -26,6 +27,7 @@ public class UserController {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
+    @RolesAllowed("ADMIN")
     public Response createUser(CreateUserRequest createUserRequest) {
 
         log.debug("Received request to create a new user. Data: {} ", createUserRequest);
@@ -39,6 +41,7 @@ public class UserController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ADMIN")
     public Response findAllUsers(@QueryParam("page") @DefaultValue("0") Integer page,
                                  @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
 
@@ -51,6 +54,7 @@ public class UserController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
+    @RolesAllowed("ADMIN")
     public Response getUserById(@PathParam("id") UUID userId) {
 
         log.debug("Received request to find user by id {}", userId);
@@ -63,6 +67,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
     @Transactional
+    @RolesAllowed("ADMIN")
     public Response updateUser(@PathParam("id") UUID userId, UpdateUserDto createUserRequest) {
 
         log.debug("Received request to update user with id {}", userId);
@@ -74,6 +79,7 @@ public class UserController {
     @DELETE
     @Path("/{id}")
     @Transactional
+    @RolesAllowed("ADMIN")
     public Response deleteUser(@PathParam("id") UUID userId) {
 
         log.debug("Received request to delete user with id {}", userId);

@@ -11,6 +11,8 @@ import dev.senna.repository.OrderRepository;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+import io.quarkus.security.ForbiddenException;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -32,6 +34,9 @@ public class OrderService {
 
     @Inject
     private ClientRepository clientRepository;
+
+    @Inject
+    SecurityIdentity identity;
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
@@ -197,8 +202,19 @@ public class OrderService {
                     orderToBeUpdated.getId(), orderToBeUpdated.getStatus(),
                     orderToBeUpdated.getClient().getClientName());
 
-            // Atualização do cliente se fornecido
-            if (reqDto.clientId() != null && !reqDto.clientId().equals(orderToBeUpdated.getClient().getClientId())) {
+            boolean isAdmin = identity.getRoles().contains("ADMIN");
+            boolean isOfficer = identity.getRoles().contains("OFFICER");
+
+            if (isOfficer) {
+                if (reqDto.clientId() != null || reqDto.saleDate() != null || reqDto.deliveryDate() != null) {
+                    log.warn("Usuário {} com role OFFICER tentou alterar campos não permitidos no pedido {}",
+                            identity.getPrincipal().getName(), orderId);
+                    throw new ForbiddenException("OFFICER pode atualizar apenas o status do pedido.");
+                }
+            }
+
+            // Atualização do cliente (apenas ADMIN)
+            if (isAdmin && reqDto.clientId() != null && !reqDto.clientId().equals(orderToBeUpdated.getClient().getClientId())) {
                 var client = clientRepository.findByIdOptional(reqDto.clientId())
                         .orElseThrow(() -> {
                             log.error("Cliente não encontrado com ID: {}", reqDto.clientId());
@@ -210,8 +226,8 @@ public class OrderService {
                 orderToBeUpdated.setClient(client);
             }
 
-            // Validação das datas se fornecidas
-            if (reqDto.saleDate() != null || reqDto.deliveryDate() != null) {
+            // Atualização das datas (apenas ADMIN)
+            if (isAdmin && (reqDto.saleDate() != null || reqDto.deliveryDate() != null)) {
                 LocalDate saleDate = reqDto.saleDate() != null ? reqDto.saleDate() : orderToBeUpdated.getSaleDate();
                 LocalDate deliveryDate = reqDto.deliveryDate() != null ? reqDto.deliveryDate() : orderToBeUpdated.getDeliveryDate();
 
@@ -228,7 +244,7 @@ public class OrderService {
                 }
             }
 
-            // Validação e atualização do status
+            // Atualização do status (ADMIN e OFFICER podem)
             if (reqDto.status() != null && !reqDto.status().equals(orderToBeUpdated.getStatus())) {
                 validateStatusTransition(orderToBeUpdated.getStatus(), reqDto.status());
                 updatePostedDateIfNeeded(orderToBeUpdated, reqDto.status());
