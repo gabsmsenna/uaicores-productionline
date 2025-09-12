@@ -42,6 +42,7 @@ class OrderControllerIT {
 
     @Inject
     ItemRepository itemRepository;
+
     @Inject
     OrderService orderService;
 

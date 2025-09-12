@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.util.UUID;
 
-@Path("/order")
+@Path("/api/order")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class OrderController {

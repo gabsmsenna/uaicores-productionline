@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.util.UUID;
 
-@Path("/client")
+@Path("/api/client")
 public class ClientController {
 
     @Inject
