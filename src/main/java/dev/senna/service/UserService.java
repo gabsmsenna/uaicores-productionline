@@ -11,8 +11,11 @@ import dev.senna.model.entity.UserEntity;
 import dev.senna.model.enums.UserRole;
 import dev.senna.repository.UserRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
+import io.quarkus.security.ForbiddenException;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,9 +28,41 @@ public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     @Inject
+    SecurityIdentity identity;
+
+    @Inject
     private UserRepository userRepository;
 
+    private UserRole getCurrentUserRole() {
+        if (identity.getRoles().contains("DEV")) return UserRole.DEV;
+        if (identity.getRoles().contains("ADMIN")) return UserRole.ADMIN;
+        if (identity.getRoles().contains("OFFICER")) return UserRole.OFFICER;
+        throw new ForbiddenException("Usuário sem role válida para esta operação.");
+    }
+
+    @Transactional
+    public void createUserBySystem(CreateUserRequest userReq) {
+        var user = new UserEntity();
+        user.setUsername(userReq.username());
+        user.setPassword(BcryptUtil.bcryptHash(userReq.password()));
+        user.setRole(userReq.role());
+
+        userRepository.persist(user);
+    }
+
     public UUID createUser(CreateUserRequest userReq) {
+
+        UserRole requesterRole = getCurrentUserRole();
+
+        if (requesterRole == UserRole.DEV) {
+        } else if (requesterRole == UserRole.ADMIN) {
+            if (userReq.role() != UserRole.OFFICER) {
+                throw new ForbiddenException("ADMIN só pode criar usuários do tipo OFFICER.");
+            }
+        } else {
+            throw new ForbiddenException("Você não possui permissão para criar usuários.");
+        }
+
         log.info("Attempting to create a new user with username: {}", userReq.username());
 
         verifyIfUsernameAlreadyInUse(userReq.username());
@@ -35,7 +70,7 @@ public class UserService {
         var user = new UserEntity();
         user.setUsername(userReq.username());
         user.setPassword(BcryptUtil.bcryptHash(userReq.password()));
-        user.setRole(UserRole.OFFICER);
+        user.setRole(userReq.role());
 
         userRepository.persist(user);
 

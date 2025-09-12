@@ -2,6 +2,7 @@ package dev.senna.controller;
 
 import dev.senna.service.ItemService;
 import dev.senna.service.OrderService;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -11,6 +12,7 @@ import org.glassfish.jaxb.core.v2.TODO;
 @Path("/api/production")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed({"ADMIN", "OFFICER"})
 public class ProductionController {
 
     @Inject

@@ -7,6 +7,7 @@ import dev.senna.service.UserService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -27,8 +28,8 @@ public class UserController {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    @RolesAllowed("ADMIN")
-    public Response createUser(CreateUserRequest createUserRequest) {
+    @RolesAllowed({"ADMIN", "DEV"})
+    public Response createUser(@Valid CreateUserRequest createUserRequest) {
 
         log.debug("Received request to create a new user. Data: {} ", createUserRequest);
 
@@ -41,7 +42,7 @@ public class UserController {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("ADMIN")
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response findAllUsers(@QueryParam("page") @DefaultValue("0") Integer page,
                                  @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
 
@@ -54,7 +55,7 @@ public class UserController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
-    @RolesAllowed("ADMIN")
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response getUserById(@PathParam("id") UUID userId) {
 
         log.debug("Received request to find user by id {}", userId);
@@ -67,7 +68,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
     @Transactional
-    @RolesAllowed("ADMIN")
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response updateUser(@PathParam("id") UUID userId, UpdateUserDto createUserRequest) {
 
         log.debug("Received request to update user with id {}", userId);
@@ -79,7 +80,7 @@ public class UserController {
     @DELETE
     @Path("/{id}")
     @Transactional
-    @RolesAllowed("ADMIN")
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response deleteUser(@PathParam("id") UUID userId) {
 
         log.debug("Received request to delete user with id {}", userId);

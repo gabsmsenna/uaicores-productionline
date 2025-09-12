@@ -1,6 +1,7 @@
 package dev.senna.repository;
 
 import dev.senna.model.entity.UserEntity;
+import dev.senna.model.enums.UserRole;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -12,6 +13,10 @@ public class UserRepository implements PanacheRepositoryBase<UserEntity, UUID> {
 
     public boolean existsByUsername(String username) {
         return count("username", username) > 0;
+    }
+
+    public boolean existsByRole(UserRole role) {
+        return count("role", role) > 0;
     }
 
     public Optional<UserEntity> findByUsername(String username) {

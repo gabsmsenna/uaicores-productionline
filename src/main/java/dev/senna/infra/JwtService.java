@@ -32,7 +32,7 @@ public class JwtService {
         var now = Instant.now();
         var exp = now.plus(ACCESS_TOKEN_VALIDITY);
 
-        return Jwt.issuer("https://uaicores-productionline.com")
+        return Jwt.issuer(issuer)
                 .subject(user.getUserId().toString())
                 .upn(user.getUsername())
                 .groups(Set.of(user.getRole().name()))

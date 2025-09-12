@@ -3,7 +3,8 @@ package dev.senna.model.enums;
 public enum UserRole {
 
     OFFICER("External Officer"),
-    ADMIN("Administrator"),;
+    ADMIN("Administrator"),
+    DEV("Developer");
 
     private String roleName;
 
