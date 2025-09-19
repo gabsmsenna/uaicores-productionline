@@ -13,4 +13,5 @@ public class ItemRepository implements PanacheRepositoryBase<ItemEntity, Long> {
     public List<ItemEntity> findByStatus(ItemStatus status) {
         return find("itemStatus", status).list();
     }
+
 }

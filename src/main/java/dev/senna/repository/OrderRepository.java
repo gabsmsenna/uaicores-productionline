@@ -8,6 +8,7 @@ import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @ApplicationScoped
@@ -29,5 +30,13 @@ public class OrderRepository implements PanacheRepositoryBase<OrderEntity, Long>
         query.page(Page.of(page, pageSize));
 
         return query;
+    }
+
+    public List<OrderEntity> findByPostedDateBetween(LocalDate start, LocalDate end) {
+        return list("postedDate >= ?1 and postedDate <= ?2", start, end);
+    }
+
+    public long countByPostedDateBetween(LocalDate start, LocalDate end) {
+        return count("postedDate >= ?1 and postedDate <= ?2", start, end);
     }
 }
