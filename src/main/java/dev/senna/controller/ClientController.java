@@ -26,7 +26,7 @@ public class ClientController {
 
     @POST
     @Transactional
-    @RolesAllowed({"ADMIN"})
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response createClient(CreateClientReqDto reqDto) {
             log.debug("Received the request to create a client");
             var clientId = clientService.createClient(reqDto);
@@ -34,7 +34,7 @@ public class ClientController {
     }
 
     @GET
-    @RolesAllowed({"ADMIN","OFFICER"})
+    @RolesAllowed({"ADMIN","DEV", "OFFICER"})
     public Response findAllClients(@QueryParam("page") @DefaultValue("0") Integer page,
                                    @QueryParam("pageSize") @DefaultValue("10") Integer pageSize) {
 
@@ -45,7 +45,7 @@ public class ClientController {
 
     @GET
     @Path("/{clientId}")
-    @RolesAllowed({"ADMIN","OFFICER"})
+    @RolesAllowed({"ADMIN","DEV", "OFFICER"})
     public Response listClientById(@PathParam("clientId") UUID clientId) {
 
             log.debug("Received the request to list a specific client");
@@ -54,7 +54,7 @@ public class ClientController {
 
     @PUT
     @Path("/{clientId}")
-    @RolesAllowed({"ADMIN"})
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response updateClient(@PathParam("clientId") UUID clientId, @Valid UpdateClientReqDto reqDto) {
 
             var client = clientService.updateClient(clientId, reqDto);
@@ -63,7 +63,7 @@ public class ClientController {
 
     @DELETE
     @Path("/{clientId}")
-    @RolesAllowed({"ADMIN"})
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response deleteClient(@PathParam("clientId") UUID clientId) {
 
             log.debug("Received the request to delete a client");

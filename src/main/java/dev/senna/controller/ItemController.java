@@ -35,7 +35,7 @@ public class ItemController {
 
     @POST
     @Transactional
-    @RolesAllowed({"ADMIN"})
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response createItem( @Valid  AddItemRequestDto reqDto) {
 
         log.debug("Received request do create an item");
@@ -47,7 +47,7 @@ public class ItemController {
 
     @GET
     @Path("/{itemId}")
-    @RolesAllowed({"ADMIN","OFFICER"})
+    @RolesAllowed({"ADMIN","DEV", "OFFICER"})
     public Response findItemById(@PathParam("itemId") Long itemId) {
         log.debug("Received request find item by id {}", itemId);
         return Response.ok(itemService.findItemById(itemId)).build();
@@ -56,7 +56,7 @@ public class ItemController {
     @PATCH
     @Path("/{itemId}/order")
     @Transactional
-    @RolesAllowed({"ADMIN"})
+    @RolesAllowed({"ADMIN", "DEV"})
     public Response assignOrder( @PathParam("itemId") Long itemId, @Valid AssignOrderToItemRequestDto reqDto ) {
         log.debug("Received request assign order to an item {}", itemId);
         itemService.assignOrder(reqDto, itemId);
@@ -66,7 +66,7 @@ public class ItemController {
     @PATCH
     @Path("/{itemId}")
     @Transactional
-    @RolesAllowed({"ADMIN","OFFICER"})
+    @RolesAllowed({"ADMIN","DEV", "OFFICER"})
     public Response updateItem(@PathParam("itemId") Long itemId, @Valid UpdateItemRequestDto reqDto) {
         log.info("Received request update an item {}", itemId);
         itemService.updateItem(itemId, reqDto);
@@ -75,7 +75,7 @@ public class ItemController {
 
     @GET
     @Path("/search")
-    @RolesAllowed({"ADMIN","OFFICER"})
+    @RolesAllowed({"ADMIN","DEV", "OFFICER"})
     public Response searchItemByStatus(
             @QueryParam("status") @NotNull(message = "Query param 'status' should not be null") ItemStatus status
             ) {

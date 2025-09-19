@@ -13,7 +13,7 @@ public record AddItemRequestDto(
         @NotNull
         Integer saleQuantity,
 
-        @NotBlank
+        @NotNull
         Material material,
 
         @NotBlank

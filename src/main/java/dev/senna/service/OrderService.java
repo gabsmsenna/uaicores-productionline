@@ -122,6 +122,7 @@ public class OrderService {
                         log.debug("Pedido ID: {} tem {} itens", orderEntity.getId(), itemsCount);
 
                         return new ListOrderProductionResponseDto(
+                                orderEntity.getId(),
                                 orderEntity.getClient().getClientName(),
                                 orderEntity.getStatus(),
                                 orderEntity.getItems().stream().map(item -> new ListItemProductionLineResponse(

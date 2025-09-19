@@ -6,7 +6,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-@Path("/ping")
+@Path("/api/ping")
 @Produces(MediaType.APPLICATION_JSON)
 public class PingController {
 

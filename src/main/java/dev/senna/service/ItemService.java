@@ -54,6 +54,7 @@ public class ItemService {
 
       item.setName(reqDto.name());
       item.setSaleQuantity(reqDto.saleQuantity());
+      item.setQuantity(reqDto.saleQuantity());
       item.setMaterial(reqDto.material());
       item.setImage(reqDto.image());
       item.setStatus(ItemStatus.IMPRESSO);

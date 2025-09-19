@@ -12,7 +12,7 @@ import org.glassfish.jaxb.core.v2.TODO;
 @Path("/api/production")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed({"ADMIN", "OFFICER"})
+@RolesAllowed({"ADMIN","DEV", "OFFICER"})
 public class ProductionController {
 
     @Inject
