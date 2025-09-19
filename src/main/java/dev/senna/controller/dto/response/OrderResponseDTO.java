@@ -5,11 +5,12 @@ import dev.senna.model.enums.OrderStatus;
 import java.time.LocalDate;
 import java.util.List;
 
-public record ListOrderProductionResponseDto(
-        LocalDate deliveryDate,
+public record OrderResponseDTO(
         Long orderId,
+        LocalDate saleDate,
+        LocalDate deliveryDate,
         String clientName,
         OrderStatus status,
-        List<ListItemProductionLineResponse> items
+        List<ItemResponseDto> items
 ) {
 }

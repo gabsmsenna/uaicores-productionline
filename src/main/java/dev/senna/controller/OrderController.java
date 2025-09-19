@@ -61,6 +61,21 @@ public class OrderController {
     }
 
     @GET
+    @Path("/{orderId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"ADMIN", "DEV", "OFFICER"})
+    public Response getOrderById(@PathParam("orderId") Long orderId) {
+
+        log.info("Received request to get an order by id {}", orderId);
+
+        var order = orderService.getOrderById(orderId);
+
+        log.info("Order found successfully! Returning the order...");
+
+        return Response.ok(order).build();
+    }
+
+    @GET
     @Path("/production")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed({"ADMIN","DEV", "OFFICER"})
@@ -113,5 +128,16 @@ public class OrderController {
         log.info("Returning order statistics");
         return Response.ok(stats).build();
 
+    }
+
+    @GET
+    @Path("/recent-orders")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({"ADMIN","DEV", "OFFICER"})
+    public Response getRecentOrders() {
+        log.info("Received request to get recent orders");
+        var orders = orderService.listRecentOrders();
+        log.info("Returning recent orders");
+        return Response.ok(orders).build();
     }
 }

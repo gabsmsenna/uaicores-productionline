@@ -4,6 +4,7 @@ import dev.senna.controller.dto.request.CreateOrderReqDto;
 import dev.senna.controller.dto.request.UpdateOrderReqDto;
 import dev.senna.controller.dto.response.*;
 import dev.senna.exception.*;
+import dev.senna.model.entity.ItemEntity;
 import dev.senna.model.entity.OrderEntity;
 import dev.senna.model.enums.OrderStatus;
 import dev.senna.repository.ClientRepository;
@@ -25,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import static java.util.stream.Collectors.toList;
 
 @ApplicationScoped
 public class OrderService {
@@ -122,6 +125,7 @@ public class OrderService {
                         log.debug("Pedido ID: {} tem {} itens", orderEntity.getId(), itemsCount);
 
                         return new ListOrderProductionResponseDto(
+                                orderEntity.getDeliveryDate(),
                                 orderEntity.getId(),
                                 orderEntity.getClient().getClientName(),
                                 orderEntity.getStatus(),
@@ -412,4 +416,43 @@ public class OrderService {
         }
     }
 
+
+    public List<RecentOrdersRespDTO> listRecentOrders() {
+        log.debug("Listing recent orders");
+
+        var recentOrders = orderRepository.findTop4ByOrderByIdDesc();
+        return recentOrders.stream()
+                .map(this::convertToRecentOrdersDTO)
+                .toList();
+    }
+
+    private RecentOrdersRespDTO convertToRecentOrdersDTO(OrderEntity orderEntity) {
+        var items = orderEntity.getItems()
+                .stream()
+                .map(this::convertToItemResponseDto);
+        return new RecentOrdersRespDTO(orderEntity.getId(), orderEntity.getClient().getClientName(),
+                orderEntity.getStatus(), items.toList());
+
+    }
+
+    private ItemResponseDto convertToItemResponseDto(ItemEntity itemEntity) {
+        return new ItemResponseDto(itemEntity.getId(),
+                itemEntity.getName(),
+                itemEntity.getQuantity(),
+                itemEntity.getSaleQuantity(),
+                itemEntity.getMaterial(),
+                itemEntity.getImage(),
+                itemEntity.getStatus());
+    }
+
+    public OrderResponseDTO getOrderById(Long orderId) {
+        log.debug("Getting order by ID: {}", orderId);
+
+        var orderEntity = orderRepository.findByIdOptional(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        return new OrderResponseDTO(orderEntity.getId() ,orderEntity.getSaleDate(), orderEntity.getDeliveryDate(),
+                orderEntity.getClient().getClientName(), orderEntity.getStatus(),
+                orderEntity.getItems().stream().map(this::convertToItemResponseDto).toList());
+    }
 }

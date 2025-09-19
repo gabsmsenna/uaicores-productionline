@@ -2,14 +2,12 @@ package dev.senna.controller.dto.response;
 
 import dev.senna.model.enums.OrderStatus;
 
-import java.time.LocalDate;
 import java.util.List;
 
-public record ListOrderProductionResponseDto(
-        LocalDate deliveryDate,
+public record RecentOrdersRespDTO(
         Long orderId,
         String clientName,
         OrderStatus status,
-        List<ListItemProductionLineResponse> items
+        List<ItemResponseDto> items
 ) {
 }

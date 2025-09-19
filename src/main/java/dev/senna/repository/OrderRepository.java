@@ -39,4 +39,10 @@ public class OrderRepository implements PanacheRepositoryBase<OrderEntity, Long>
     public long countByPostedDateBetween(LocalDate start, LocalDate end) {
         return count("postedDate >= ?1 and postedDate <= ?2", start, end);
     }
+
+    public List<OrderEntity> findTop4ByOrderByIdDesc() {
+        return find("ORDER BY id DESC")
+                .page(0, 4)
+                .list();
+    }
 }
