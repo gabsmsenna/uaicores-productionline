@@ -92,6 +92,7 @@ public class ItemService {
 
         return items.stream()
                 .map(itemEntity -> new ListItemProductionLineResponse(
+                        itemEntity.getId(),
                         itemEntity.getName(),
                         itemEntity.getQuantity(),
                         itemEntity.getSaleQuantity(),
@@ -204,6 +205,7 @@ public class ItemService {
 
         return items.stream()
                 .map(itemEntity -> new ListItemProductionLineResponse(
+                        itemEntity.getId(),
                         itemEntity.getName(),
                         itemEntity.getQuantity(),
                         itemEntity.getSaleQuantity(),

@@ -42,7 +42,7 @@ public class AuthController {
         String access = jwtService.generateAccessToken(userEntity);
         String refresh = jwtService.generateAndStoreRefreshToken(userEntity);
 
-        return Response.ok(new TokenResponse(access, jwtService.accessTokenTtlSeconds(), refresh)).build();
+        return Response.ok(new TokenResponse(access, jwtService.accessTokenTtlSeconds(), refresh, userEntity.getRole())).build();
     }
 
     @POST
@@ -57,6 +57,6 @@ public class AuthController {
         String access = jwtService.generateAccessToken(user);
         String refresh = jwtService.generateAndStoreRefreshToken(user);
 
-        return Response.ok(new TokenResponse(access, jwtService.accessTokenTtlSeconds(), refresh)).build();
+        return Response.ok(new TokenResponse(access, jwtService.accessTokenTtlSeconds(), refresh, user.getRole())).build();
     }
 }

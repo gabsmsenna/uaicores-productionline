@@ -4,6 +4,7 @@ import dev.senna.model.enums.ItemStatus;
 import dev.senna.model.enums.Material;
 
 public record ListItemProductionLineResponse(
+        Long id,
         String name,
         Integer quantity,
         Integer saleQuantity,
