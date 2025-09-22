@@ -130,6 +130,7 @@ public class OrderService {
                                 orderEntity.getClient().getClientName(),
                                 orderEntity.getStatus(),
                                 orderEntity.getItems().stream().map(item -> new ListItemProductionLineResponse(
+                                        item.getId(),
                                         item.getName(),
                                         item.getQuantity(),
                                         item.getSaleQuantity(),
@@ -170,6 +171,7 @@ public class OrderService {
                         return new LastSendOrdersResponseDto(
                                 orderEntity.getClient().getClientName(),
                                 orderEntity.getItems().stream().map(itemEntity -> new ListItemProductionLineResponse(
+                                        itemEntity.getId(),
                                         itemEntity.getName(),
                                         itemEntity.getQuantity(),
                                         itemEntity.getSaleQuantity(),
